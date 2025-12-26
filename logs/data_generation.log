@@ -1,0 +1,25 @@
+2025-12-26 14:36:58,962 | INFO | Data generation started
+2025-12-26 14:36:58,962 | INFO | Target records: 1,000,000
+2025-12-26 14:36:58,962 | INFO | Batch size: 100,000
+2025-12-26 14:37:44,154 | INFO | Batch written | Total records: 100,000 | Memory usage: 215.33 MB | File: ../data/raw\year_month=2025-05\transactions_ff1aecb303bd41f1a8f7296dd142b3b5.parquet
+2025-12-26 14:38:27,894 | INFO | Batch written | Total records: 200,000 | Memory usage: 230.81 MB | File: ../data/raw\year_month=2024-03\transactions_006240cc6d3d4c19b7242067e65ba264.parquet
+2025-12-26 14:39:12,044 | INFO | Batch written | Total records: 300,000 | Memory usage: 232.90 MB | File: ../data/raw\year_month=2025-10\transactions_a87b3f4a5ecf40f1829f3f0343ec8450.parquet
+2025-12-26 14:39:56,424 | INFO | Batch written | Total records: 400,000 | Memory usage: 233.00 MB | File: ../data/raw\year_month=2024-06\transactions_35f35ff21580407e974ce0af29144a70.parquet
+2025-12-26 14:40:40,780 | INFO | Batch written | Total records: 500,000 | Memory usage: 232.92 MB | File: ../data/raw\year_month=2025-04\transactions_90d90b0c1296435d9dd6d445cb045bce.parquet
+2025-12-26 14:42:57,284 | INFO | Data generation started
+2025-12-26 14:42:57,285 | INFO | Target records: 1,000,000
+2025-12-26 14:42:57,285 | INFO | Batch size: 100,000
+2025-12-26 14:43:41,651 | INFO | Batch written | Total records: 100,000 | Memory usage: 211.38 MB | File: ../data/raw\year_month=2025-05\transactions_cf968095d1254435aec261e348c1fbd6.parquet
+2025-12-26 14:44:25,773 | INFO | Batch written | Total records: 200,000 | Memory usage: 230.71 MB | File: ../data/raw\year_month=2024-03\transactions_ac1597b660e9464e8ce7c86ead163d83.parquet
+2025-12-26 14:45:10,211 | INFO | Batch written | Total records: 300,000 | Memory usage: 227.95 MB | File: ../data/raw\year_month=2025-10\transactions_3e747e96765c4409910c70fb10e890f5.parquet
+2025-12-26 14:45:55,448 | INFO | Batch written | Total records: 400,000 | Memory usage: 230.83 MB | File: ../data/raw\year_month=2024-06\transactions_6641748d02ec4ae09c1031743f1e0789.parquet
+2025-12-26 14:46:40,403 | INFO | Batch written | Total records: 500,000 | Memory usage: 231.03 MB | File: ../data/raw\year_month=2025-04\transactions_cd0a4798e14047db8375b3c86d0d40b2.parquet
+2025-12-26 14:47:24,824 | INFO | Batch written | Total records: 600,000 | Memory usage: 231.88 MB | File: ../data/raw\year_month=2024-03\transactions_658caf20eca341428a103cfb9f73f23c.parquet
+2025-12-26 14:48:09,099 | INFO | Batch written | Total records: 700,000 | Memory usage: 230.11 MB | File: ../data/raw\year_month=2025-08\transactions_c672e721dd7842d3a5121b9712f1d299.parquet
+2025-12-26 14:48:55,382 | INFO | Batch written | Total records: 800,000 | Memory usage: 234.21 MB | File: ../data/raw\year_month=2024-05\transactions_e38116a733b64d478d9fb70f495801ea.parquet
+2025-12-26 14:50:04,848 | INFO | Batch written | Total records: 900,000 | Memory usage: 234.16 MB | File: ../data/raw\year_month=2024-10\transactions_43f47d3e80114510a35b8709bef90010.parquet
+2025-12-26 14:50:49,422 | INFO | Batch written | Total records: 1,000,000 | Memory usage: 234.07 MB | File: ../data/raw\year_month=2024-02\transactions_b51f6958b9dd4c9cbb09bc848d3eba23.parquet
+2025-12-26 14:50:49,423 | INFO |  Data generation completed successfully
+2025-12-26 14:50:49,423 | INFO | Total records generated: 1,000,000
+2025-12-26 14:50:49,423 | INFO | Total time taken: 472.14 seconds
+2025-12-26 14:50:49,423 | INFO | Final memory usage: 234.07 MB

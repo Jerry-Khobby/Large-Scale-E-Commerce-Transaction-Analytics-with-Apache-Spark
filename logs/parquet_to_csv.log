@@ -1,0 +1,30 @@
+2025-12-26 15:15:20,378 | INFO | Starting conversion from Parquet to CSV
+2025-12-26 15:15:20,379 | INFO | Looking in: ../../data/raw
+2025-12-26 15:15:48,427 | INFO | Found 1 files in ../../data/raw\year_month=2024-02
+2025-12-26 15:15:49,544 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2024-02\transactions_b51f6958b9dd4c9cbb09bc848d3eba23.parquet | Memory usage: 257.20 MB
+2025-12-26 15:15:49,546 | INFO | Found 3 files in ../../data/raw\year_month=2024-03
+2025-12-26 15:15:49,697 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2024-03\transactions_006240cc6d3d4c19b7242067e65ba264.parquet | Memory usage: 314.45 MB
+2025-12-26 15:15:49,853 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2024-03\transactions_658caf20eca341428a103cfb9f73f23c.parquet | Memory usage: 360.91 MB
+2025-12-26 15:15:50,017 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2024-03\transactions_ac1597b660e9464e8ce7c86ead163d83.parquet | Memory usage: 413.34 MB
+2025-12-26 15:15:50,019 | INFO | Found 1 files in ../../data/raw\year_month=2024-05
+2025-12-26 15:15:50,184 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2024-05\transactions_e38116a733b64d478d9fb70f495801ea.parquet | Memory usage: 452.73 MB
+2025-12-26 15:15:50,186 | INFO | Found 2 files in ../../data/raw\year_month=2024-06
+2025-12-26 15:15:50,344 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2024-06\transactions_35f35ff21580407e974ce0af29144a70.parquet | Memory usage: 494.88 MB
+2025-12-26 15:15:50,498 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2024-06\transactions_6641748d02ec4ae09c1031743f1e0789.parquet | Memory usage: 487.46 MB
+2025-12-26 15:15:50,500 | INFO | Found 1 files in ../../data/raw\year_month=2024-10
+2025-12-26 15:15:50,649 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2024-10\transactions_43f47d3e80114510a35b8709bef90010.parquet | Memory usage: 549.43 MB
+2025-12-26 15:15:50,651 | INFO | Found 2 files in ../../data/raw\year_month=2025-04
+2025-12-26 15:15:50,809 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2025-04\transactions_90d90b0c1296435d9dd6d445cb045bce.parquet | Memory usage: 604.10 MB
+2025-12-26 15:15:50,965 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2025-04\transactions_cd0a4798e14047db8375b3c86d0d40b2.parquet | Memory usage: 639.76 MB
+2025-12-26 15:15:50,966 | INFO | Found 2 files in ../../data/raw\year_month=2025-05
+2025-12-26 15:15:51,113 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2025-05\transactions_cf968095d1254435aec261e348c1fbd6.parquet | Memory usage: 675.28 MB
+2025-12-26 15:15:51,266 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2025-05\transactions_ff1aecb303bd41f1a8f7296dd142b3b5.parquet | Memory usage: 715.30 MB
+2025-12-26 15:15:51,267 | INFO | Found 1 files in ../../data/raw\year_month=2025-08
+2025-12-26 15:15:51,420 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2025-08\transactions_c672e721dd7842d3a5121b9712f1d299.parquet | Memory usage: 750.63 MB
+2025-12-26 15:15:51,422 | INFO | Found 2 files in ../../data/raw\year_month=2025-10
+2025-12-26 15:15:51,575 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2025-10\transactions_3e747e96765c4409910c70fb10e890f5.parquet | Memory usage: 786.28 MB
+2025-12-26 15:15:51,725 | INFO | Loaded 100000 rows from ../../data/raw\year_month=2025-10\transactions_a87b3f4a5ecf40f1829f3f0343ec8450.parquet | Memory usage: 821.78 MB
+2025-12-26 15:16:04,664 | INFO | CSV saved to ../../data/dataset.csv
+2025-12-26 15:16:04,665 | INFO | Total rows: 1500000
+2025-12-26 15:16:04,666 | INFO | Total time taken: 44.29 seconds
+2025-12-26 15:16:04,667 | INFO | Final memory usage: 983.88 MB
