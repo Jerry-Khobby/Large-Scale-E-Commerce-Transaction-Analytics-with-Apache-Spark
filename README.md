@@ -33,17 +33,36 @@ it with PySpark. See [specification.md](specification.md) for the full brief.
 
 ## Setup
 
-Requirements: Python 3.10+, **Java 17 or 21** (needed by PySpark 4.x), ~15 GB free disk.
+~15 GB free disk is needed for the full dataset.
+
+### Option A - Docker (recommended, especially on Windows)
+
+The image bundles Python 3.12, a Java runtime and all requirements, so there is no
+local Java/Hadoop setup. The project folder is mounted at `/app`, so data and
+outputs appear in your local folders.
+
+```bash
+docker compose build
+docker compose run --rm spark python src/generate_data.py --records 25000000
+```
+
+Prefix every command in the table below with `docker compose run --rm spark`.
+The Spark UI is at <http://localhost:4040> while a job runs.
+
+### Option B - local Python
+
+Requirements: Python 3.10+, **Java 17 or 21** (needed by PySpark 4.x).
 
 ```bash
 python -m venv venv
-venv\Scripts\activate          # Windows  (macOS/Linux: source venv/bin/activate)
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Windows only:** Spark needs `winutils.exe` and `hadoop.dll` to write files.
-Download them for Hadoop 3.x, put them in e.g. `C:\hadoop\bin`, then set
-`HADOOP_HOME=C:\hadoop` and add `%HADOOP_HOME%\bin` to `PATH`.
+Running Spark natively on Windows is not recommended: pyspark 4.1.0 fails to import
+there (`socketserver.UnixStreamServer`), and writing files needs `winutils.exe` /
+`HADOOP_HOME`. Use Docker instead. `generate_data.py` and `pandas_test.py` do not use
+Spark and run fine natively.
 
 ## How to run
 
