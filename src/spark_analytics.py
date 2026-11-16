@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 import csv
+import shutil
 
 from pyspark.sql import DataFrame, SparkSession, Window
 from pyspark.sql import functions as F
@@ -262,6 +263,21 @@ def window_analysis(spark: SparkSession, df: DataFrame) -> None:
     """), "above_average_customers")
 
 
+def export_query_results() -> None:
+    """
+    Copy each Spark result (data/analytics/<name>/part-*.csv) to
+    outputs/query_results/<name>.csv - plainly named files that are committed
+    as the project's sample outputs (data/ itself is git-ignored).
+    """
+    out_dir = config.OUTPUTS_DIR / "query_results"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for result_dir in sorted(p for p in config.ANALYTICS_DIR.iterdir() if p.is_dir()):
+        parts = sorted(result_dir.glob("part-*.csv"))
+        if parts:
+            shutil.copyfile(parts[0], out_dir / f"{result_dir.name}.csv")
+    logger.info(f"Query results exported to {out_dir}")
+
+
 def write_timings(timings: dict[str, float]) -> None:
     out = config.REPORTS_DIR / "analytics_timings.csv"
     with open(out, "w", newline="", encoding="utf-8") as fh:
@@ -293,6 +309,7 @@ def main() -> None:
             window_analysis(spark, df)
 
         write_timings(timings)
+        export_query_results()
     except Exception:
         logger.error("Spark analytics failed", exc_info=True)
         raise
