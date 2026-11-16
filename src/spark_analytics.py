@@ -24,7 +24,11 @@ logger = get_logger("SparkAnalytics", "spark_analytics.log")
 
 
 def publish(df: DataFrame, name: str, n: int = 20) -> DataFrame:
-    """Show a result, save it to data/analytics/<name>/ and return it."""
+    """Round decimals, show a result, save it to data/analytics/<name>/ and return it."""
+    df = df.select(*[
+        F.round(c, 2).alias(c) if t in ("double", "float") else F.col(c)
+        for c, t in df.dtypes
+    ])
     df.show(n, truncate=False)
     save_csv(df, name)
     logger.info(f"Saved {name}")
