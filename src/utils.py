@@ -4,9 +4,10 @@ Shared helpers: logging, Spark session creation, timing and result export.
 
 from __future__ import annotations
 
+import io
 import logging
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stdout
 from pathlib import Path
 from typing import Iterator
 
@@ -92,6 +93,16 @@ def save_csv(df, name: str, base_dir: Path = config.ANALYTICS_DIR) -> Path:
         .csv(str(out_path))
     )
     return out_path
+
+
+def save_explain(df, name: str) -> Path:
+    """Write ``df.explain('formatted')`` to ``outputs/reports/explain_<name>.txt``."""
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        df.explain(mode="formatted")
+    out = config.REPORTS_DIR / f"explain_{name}.txt"
+    out.write_text(buffer.getvalue(), encoding="utf-8")
+    return out
 
 
 def dir_size_bytes(path: Path) -> int:

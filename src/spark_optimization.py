@@ -19,15 +19,14 @@ from __future__ import annotations
 
 import argparse
 import csv
-import io
 import time
-from contextlib import redirect_stdout
 
 from pyspark.sql import DataFrame, SparkSession, Window
 from pyspark.sql import functions as F
 
 import config
 from utils import ensure_dirs, get_logger, get_spark_session
+from utils import save_explain as write_explain
 
 logger = get_logger("SparkOptimization", "spark_optimization.log")
 
@@ -71,13 +70,8 @@ def run_workload(df: DataFrame, broadcast: bool) -> float:
 
 
 def save_explain(df: DataFrame, name: str) -> None:
-    """Capture ``df.explain('formatted')`` output into a text file."""
-    buffer = io.StringIO()
-    with redirect_stdout(buffer):
-        df.explain(mode="formatted")
-    out = config.REPORTS_DIR / f"explain_{name}.txt"
-    out.write_text(buffer.getvalue(), encoding="utf-8")
-    logger.info(f"Execution plan saved to {out}")
+    """Save the formatted execution plan of ``df`` to outputs/reports/."""
+    logger.info(f"Execution plan saved to {write_explain(df, name)}")
 
 
 def baseline_vs_optimized(spark: SparkSession) -> list[dict]:
