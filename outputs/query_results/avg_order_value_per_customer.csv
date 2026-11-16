@@ -1,0 +1,2 @@
+customers,mean_avg_order_value,median_avg_order_value,min_avg_order_value,max_avg_order_value
+250000,691.59,686.33,280.28,1315.78

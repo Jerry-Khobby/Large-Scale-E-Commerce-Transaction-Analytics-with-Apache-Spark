@@ -1,0 +1,29 @@
+2026-11-16 14:02:48,745 | INFO | Loaded cleaned data: 24,502,089 rows
+2026-11-16 14:03:32,695 | INFO | Saved revenue_by_country
+2026-11-16 14:04:01,023 | INFO | Saved monthly_revenue_trend
+2026-11-16 14:04:18,948 | INFO | Saved revenue_by_payment
+2026-11-16 14:04:38,074 | INFO | Saved revenue_by_category
+2026-11-16 14:04:38,075 | INFO | 1_revenue finished in 109.34s
+2026-11-16 14:05:01,626 | INFO | Saved top_products_revenue
+2026-11-16 14:05:23,612 | INFO | Saved top_products_quantity
+2026-11-16 14:05:35,935 | INFO | Saved avg_price_by_category
+2026-11-16 14:05:58,349 | INFO | Saved product_failure_rates
+2026-11-16 14:05:58,351 | INFO | 2_product finished in 80.28s
+2026-11-16 14:06:57,575 | INFO | Saved top_customers
+2026-11-16 14:07:34,187 | INFO | Saved avg_order_value_per_customer
+2026-11-16 14:08:46,281 | INFO | Saved purchase_frequency_distribution
+2026-11-16 14:09:26,908 | INFO | Saved customers_only_failed
+2026-11-16 14:09:26,909 | INFO | 3_customer finished in 208.57s
+2026-11-16 14:09:40,379 | INFO | Saved transactions_by_hour
+2026-11-16 14:09:52,316 | INFO | Saved transactions_by_day_of_week
+2026-11-16 14:09:59,486 | INFO | Saved peak_months
+2026-11-16 14:10:10,457 | INFO | Saved success_rate_by_quarter
+2026-11-16 14:10:19,313 | INFO | Saved hour_day_heatmap
+2026-11-16 14:10:35,762 | INFO | Saved order_value_distribution
+2026-11-16 14:10:35,763 | INFO | 4_time_sql finished in 68.86s
+2026-11-16 14:10:52,019 | INFO | Saved product_rank_in_category
+2026-11-16 14:11:15,193 | INFO | Saved running_revenue_by_month
+2026-11-16 14:12:07,796 | INFO | Saved above_average_customers
+2026-11-16 14:12:07,797 | INFO | 5_window finished in 92.04s
+2026-11-16 14:12:07,849 | INFO | Timings written to /app/outputs/reports/analytics_timings.csv
+2026-11-16 14:12:27,843 | INFO | Query results exported to E:\jerry\Downloads\Large-Scale-E-Commerce-Transaction-Analytics-with-Apache-Spark\outputs\query_results
