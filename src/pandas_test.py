@@ -117,7 +117,7 @@ def load_full(max_system_mem_pct: float) -> dict:
         elapsed = time.perf_counter() - start
         peak_mb = max(peak_mb, child_mb)
         trace.append({"seconds": round(elapsed, 1), "pandas_process_mb": round(child_mb),
-                      "system_memory_pct": sys_pct})
+                      "system_memory_pct": sys_pct, "machine_ram_mb": round(mem.total / 1024 ** 2)})
 
         if sys_pct >= max_system_mem_pct:
             child.kill()
@@ -139,7 +139,7 @@ def load_full(max_system_mem_pct: float) -> dict:
     with open(config.REPORTS_DIR / "pandas_memory_trace.csv", "w", newline="",
               encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=["seconds", "pandas_process_mb",
-                                                "system_memory_pct"])
+                                                "system_memory_pct", "machine_ram_mb"])
         writer.writeheader()
         writer.writerows(trace)
 

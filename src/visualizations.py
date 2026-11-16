@@ -136,7 +136,8 @@ def order_value_histogram() -> None:
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.bar(df["order_value_bucket"], df["orders"], width=46, align="edge", color=PRIMARY)
     ax.xaxis.set_major_formatter(money)
-    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v / 1e3:,.0f}K"))
+    ax.yaxis.set_major_formatter(FuncFormatter(
+        lambda v, _: f"{v / 1e6:,.1f}M" if v >= 1e6 else f"{v / 1e3:,.0f}K"))
     ax.grid(axis="x", visible=False)
     ax.set_title("Order value distribution ($50 buckets)")
     ax.set_xlabel("Order value")
@@ -167,13 +168,32 @@ def pandas_memory_trace() -> None:
     if not trace_file.exists():
         raise FileNotFoundError("No memory trace - run pandas_test.py first")
     df = pd.read_csv(trace_file)
-    total_gb = psutil.virtual_memory().total / 1024 ** 3
+    # RAM of the machine the test ran on (recorded in the trace), not of this one
+    total_gb = (df["machine_ram_mb"].iloc[0] / 1024 if "machine_ram_mb" in df
+                else psutil.virtual_memory().total / 1024 ** 3)
+    # Projected size of the full DataFrame, measured from the 1M-row sample
+    results_file = config.REPORTS_DIR / "pandas_test_results.csv"
+    projected_gb = None
+    if results_file.exists():
+        res = pd.read_csv(results_file).set_index("test")
+        if "pandas_full_dataset_estimate" in res.index:
+            projected_gb = res.loc["pandas_full_dataset_estimate", "dataframe_mb"] / 1024
+
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df["seconds"], df["pandas_process_mb"] / 1024, color=PRIMARY, linewidth=2)
-    ax.axhline(total_gb, color=MUTED, linewidth=1, linestyle="--")
-    ax.annotate(f"Machine RAM ({total_gb:.1f} GB)", (df["seconds"].iloc[0], total_gb),
-                xytext=(0, 6), textcoords="offset points", color=INK_SECONDARY, fontsize=9)
-    ax.set_ylim(0, total_gb * 1.1)
+    last = df.iloc[-1]
+    ax.annotate(f"Load aborted at {last['system_memory_pct']:.0f}% system RAM",
+                (last["seconds"], last["pandas_process_mb"] / 1024), xytext=(-8, 10),
+                textcoords="offset points", ha="right", color=INK_SECONDARY, fontsize=9)
+
+    lines = [(total_gb, f"Machine RAM ({total_gb:.1f} GB)")]
+    if projected_gb:
+        lines.append((projected_gb, f"Projected full DataFrame ({projected_gb:.1f} GB)"))
+    for y, label in lines:
+        ax.axhline(y, color=MUTED, linewidth=1, linestyle="--")
+        ax.annotate(label, (df["seconds"].iloc[0], y), xytext=(0, 5),
+                    textcoords="offset points", color=INK_SECONDARY, fontsize=9)
+    ax.set_ylim(0, max(y for y, _ in lines) * 1.12)
     ax.grid(axis="x", visible=False)
     ax.set_title("Pandas full-dataset load: process memory over time")
     ax.set_xlabel("Seconds since load started")
