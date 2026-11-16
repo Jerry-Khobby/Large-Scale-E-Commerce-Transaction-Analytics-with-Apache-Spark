@@ -14,7 +14,8 @@ missing city/email, duplicate transactions, negative price/quantity and
 mismatched ``total_amount``.
 
 Usage:
-    python src/generate_data.py --records 20000000 --batch-size 500000 --overwrite
+    python src/generate_data.py --records 20000000 --batch-size 500000 \
+        --overwrite
 """
 
 from __future__ import annotations
@@ -41,26 +42,30 @@ CUSTOMER_POOL_SIZE = 250_000
 PRODUCTS_PER_CATEGORY = 60
 
 # Explicit Arrow schema so every Parquet file is identical (spec section 3.1)
-SCHEMA = pa.schema([
-    ("transaction_id", pa.string()),
-    ("customer_id", pa.string()),
-    ("customer_name", pa.string()),
-    ("email", pa.string()),
-    ("country", pa.string()),
-    ("city", pa.string()),
-    ("product_category", pa.string()),
-    ("product_name", pa.string()),
-    ("price", pa.float64()),
-    ("quantity", pa.int32()),
-    ("total_amount", pa.float64()),
-    ("payment_method", pa.string()),
-    ("status", pa.string()),
-    ("transaction_timestamp", pa.timestamp("us")),
-    ("year_month", pa.string()),
-])
+SCHEMA = pa.schema(
+    [
+        ("transaction_id", pa.string()),
+        ("customer_id", pa.string()),
+        ("customer_name", pa.string()),
+        ("email", pa.string()),
+        ("country", pa.string()),
+        ("city", pa.string()),
+        ("product_category", pa.string()),
+        ("product_name", pa.string()),
+        ("price", pa.float64()),
+        ("quantity", pa.int32()),
+        ("total_amount", pa.float64()),
+        ("payment_method", pa.string()),
+        ("status", pa.string()),
+        ("transaction_timestamp", pa.timestamp("us")),
+        ("year_month", pa.string()),
+    ]
+)
 
 
-def build_customer_pool(fake: Faker, rng: np.random.Generator, size: int) -> pd.DataFrame:
+def build_customer_pool(
+    fake: Faker, rng: np.random.Generator, size: int
+) -> pd.DataFrame:
     """
     Create a reusable pool of customers (id, name, email, country, city).
 
@@ -79,50 +84,104 @@ def build_customer_pool(fake: Faker, rng: np.random.Generator, size: int) -> pd.
     last_s = pd.Series(rng.choice(last, size))
     ids = np.arange(1, size + 1)
 
-    return pd.DataFrame({
-        "customer_id": [f"CUST-{i:07d}" for i in ids],
-        "customer_name": first_s + " " + last_s,
-        # suffix with the id so every customer email is unique
-        "email": (first_s.str.lower() + "." + last_s.str.lower() + pd.Series(ids).astype(str)
-                  + "@" + pd.Series(rng.choice(domains, size))),
-        "country": rng.choice(countries, size),
-        "city": rng.choice(cities, size),
-    })
+    return pd.DataFrame(
+        {
+            "customer_id": [f"CUST-{i:07d}" for i in ids],
+            "customer_name": first_s + " " + last_s,
+            # suffix with the id so every customer email is unique
+            "email": (
+                first_s.str.lower()
+                + "."
+                + last_s.str.lower()
+                + pd.Series(ids).astype(str)
+                + "@"
+                + pd.Series(rng.choice(domains, size))
+            ),
+            "country": rng.choice(countries, size),
+            "city": rng.choice(cities, size),
+        }
+    )
 
 
 def build_product_pool(fake: Faker, rng: np.random.Generator) -> pd.DataFrame:
     """Create a catalogue of products per category, each with a base price."""
     # Rough price ranges per category so analytics look realistic
     price_ranges = {
-        "Electronics": (50, 1500), "Fashion": (10, 300), "Home & Garden": (15, 800),
-        "Sports": (10, 600), "Books": (5, 80), "Beauty": (5, 150),
-        "Toys": (5, 200), "Food": (2, 60),
+        "Electronics": (50, 1500),
+        "Fashion": (10, 300),
+        "Home & Garden": (15, 800),
+        "Sports": (10, 600),
+        "Books": (5, 80),
+        "Beauty": (5, 150),
+        "Toys": (5, 200),
+        "Food": (2, 60),
     }
     rows = []
     for category in config.PRODUCT_CATEGORIES:
         low, high = price_ranges[category]
         names = set()
         while len(names) < PRODUCTS_PER_CATEGORY:
-            names.add(f"{fake.color_name()} {fake.word().title()} {category.split()[0]}")
+            names.add(
+                f"{fake.color_name()} {fake.word().title()} "
+                f"{category.split()[0]}"
+            )
         for name in sorted(names):
-            rows.append((category, name, round(float(rng.uniform(low, high)), 2)))
+            rows.append(
+                (category, name, round(float(rng.uniform(low, high)), 2))
+            )
     logger.info(f"Built product catalogue of {len(rows):,} products")
-    return pd.DataFrame(rows, columns=["product_category", "product_name", "base_price"])
+    return pd.DataFrame(
+        rows, columns=["product_category", "product_name", "base_price"]
+    )
 
 
 # Relative shopping activity per hour of day (quiet overnight, evening peak)
-HOUR_WEIGHTS = np.array([2, 1, 1, 1, 1, 2, 3, 5, 6, 7, 8, 8,
-                         9, 8, 7, 7, 8, 9, 10, 11, 11, 9, 6, 4], dtype=float)
+HOUR_WEIGHTS = np.array(
+    [
+        2,
+        1,
+        1,
+        1,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        8,
+        9,
+        8,
+        7,
+        7,
+        8,
+        9,
+        10,
+        11,
+        11,
+        9,
+        6,
+        4,
+    ],
+    dtype=float,
+)
 HOUR_WEIGHTS /= HOUR_WEIGHTS.sum()
 
 
 def _day_weights() -> tuple[pd.DatetimeIndex, np.ndarray]:
-    """Per-day sampling weights: weekend boost, Nov/Dec peak and yearly growth."""
-    days = pd.date_range(config.START_DATE.date(), config.END_DATE.date(), freq="D")
-    dow, months, years = (np.asarray(x) for x in (days.dayofweek, days.month, days.year))
+    """Per-day sampling weights: weekend, Nov/Dec peak, yearly growth."""
+    days = pd.date_range(
+        config.START_DATE.date(), config.END_DATE.date(), freq="D"
+    )
+    dow, months, years = (
+        np.asarray(x) for x in (days.dayofweek, days.month, days.year)
+    )
     weekday = np.where(dow >= 5, 1.25, 1.0)
-    month = np.select([months == 11, months == 12, np.isin(months, [1, 2])],
-                      [1.35, 1.6, 0.85], 1.0)
+    month = np.select(
+        [months == 11, months == 12, np.isin(months, [1, 2])],
+        [1.35, 1.6, 0.85],
+        1.0,
+    )
     growth = 1.0 + 0.15 * (years - years.min())
     weights = weekday * month * growth
     return days, weights / weights.sum()
@@ -139,32 +198,46 @@ def sample_timestamps(n: int, rng: np.random.Generator) -> pd.Series:
     return pd.Series(day + pd.to_timedelta(hour * 3600 + second, unit="s"))
 
 
-def generate_batch(n: int, customers: pd.DataFrame, products: pd.DataFrame,
-                   rng: np.random.Generator) -> pd.DataFrame:
-    """Generate ``n`` transactions, including intentional data-quality issues."""
-    cust = customers.iloc[rng.integers(0, len(customers), n)].reset_index(drop=True)
-    prod = products.iloc[rng.integers(0, len(products), n)].reset_index(drop=True)
+def generate_batch(
+    n: int,
+    customers: pd.DataFrame,
+    products: pd.DataFrame,
+    rng: np.random.Generator,
+) -> pd.DataFrame:
+    """Generate ``n`` transactions, with intentional data-quality issues."""
+    cust = customers.iloc[rng.integers(0, len(customers), n)].reset_index(
+        drop=True
+    )
+    prod = products.iloc[rng.integers(0, len(products), n)].reset_index(
+        drop=True
+    )
 
-    price = np.round(prod["base_price"].to_numpy() * rng.uniform(0.9, 1.1, n), 2)
+    price = np.round(
+        prod["base_price"].to_numpy() * rng.uniform(0.9, 1.1, n), 2
+    )
     quantity = rng.integers(1, 6, n).astype(np.int32)
 
     timestamps = sample_timestamps(n, rng)
 
-    df = pd.DataFrame({
-        "transaction_id": [str(uuid.uuid4()) for _ in range(n)],
-        "customer_id": cust["customer_id"],
-        "customer_name": cust["customer_name"],
-        "email": cust["email"].astype(object),
-        "country": cust["country"],
-        "city": cust["city"].astype(object),
-        "product_category": prod["product_category"],
-        "product_name": prod["product_name"],
-        "price": price,
-        "quantity": quantity,
-        "payment_method": rng.choice(config.PAYMENT_METHODS, n, p=config.PAYMENT_WEIGHTS),
-        "status": rng.choice(config.STATUSES, n, p=config.STATUS_WEIGHTS),
-        "transaction_timestamp": timestamps,
-    })
+    df = pd.DataFrame(
+        {
+            "transaction_id": [str(uuid.uuid4()) for _ in range(n)],
+            "customer_id": cust["customer_id"],
+            "customer_name": cust["customer_name"],
+            "email": cust["email"].astype(object),
+            "country": cust["country"],
+            "city": cust["city"].astype(object),
+            "product_category": prod["product_category"],
+            "product_name": prod["product_name"],
+            "price": price,
+            "quantity": quantity,
+            "payment_method": rng.choice(
+                config.PAYMENT_METHODS, n, p=config.PAYMENT_WEIGHTS
+            ),
+            "status": rng.choice(config.STATUSES, n, p=config.STATUS_WEIGHTS),
+            "transaction_timestamp": timestamps,
+        }
+    )
 
     # --- Intentional data-quality issues (spec 3.3) -------------------------
     df.loc[rng.random(n) < config.NULL_RATE, "city"] = None
@@ -179,10 +252,13 @@ def generate_batch(n: int, customers: pd.DataFrame, products: pd.DataFrame,
 
     mismatch = rng.random(n) < config.MISMATCH_RATE
     df.loc[mismatch, "total_amount"] = np.round(
-        df.loc[mismatch, "total_amount"] * rng.uniform(1.1, 1.5, mismatch.sum()), 2
+        df.loc[mismatch, "total_amount"]
+        * rng.uniform(1.1, 1.5, mismatch.sum()),
+        2,
     )
 
-    # Duplicates: replace some rows with exact copies of other rows (row count unchanged)
+    # Duplicates: replace some rows with exact copies of other rows
+    # (row count unchanged)
     n_dupes = int(n * config.DUPLICATE_RATE)
     if n_dupes:
         drop_idx = rng.choice(n, n_dupes, replace=False)
@@ -208,13 +284,24 @@ def write_batch(df: pd.DataFrame, batch_no: int) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[1])
-    parser.add_argument("--records", type=int, default=config.DEFAULT_TOTAL_RECORDS,
-                        help="total number of transactions to generate")
-    parser.add_argument("--batch-size", type=int, default=config.DEFAULT_BATCH_SIZE,
-                        help="rows generated and written per batch")
+    parser.add_argument(
+        "--records",
+        type=int,
+        default=config.DEFAULT_TOTAL_RECORDS,
+        help="total number of transactions to generate",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=config.DEFAULT_BATCH_SIZE,
+        help="rows generated and written per batch",
+    )
     parser.add_argument("--seed", type=int, default=config.RANDOM_SEED)
-    parser.add_argument("--overwrite", action="store_true",
-                        help="delete existing data/raw contents first")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="delete existing data/raw contents first",
+    )
     return parser.parse_args()
 
 
@@ -222,10 +309,15 @@ def main() -> None:
     args = parse_args()
     ensure_dirs()
 
-    existing = [p for p in config.RAW_DIR.iterdir() if not p.name.startswith(".")]
+    existing = [
+        p for p in config.RAW_DIR.iterdir() if not p.name.startswith(".")
+    ]
     if existing:
         if not args.overwrite:
-            logger.error(f"{config.RAW_DIR} is not empty. Re-run with --overwrite to replace it.")
+            logger.error(
+                f"{config.RAW_DIR} is not empty. "
+                "Re-run with --overwrite to replace it."
+            )
             sys.exit(1)
         logger.info(f"Removing existing data in {config.RAW_DIR}")
         for path in existing:  # keeps .gitkeep
@@ -238,7 +330,9 @@ def main() -> None:
     peak_mem_mb = 0.0
 
     logger.info("Data generation started")
-    logger.info(f"Target records: {args.records:,} | Batch size: {args.batch_size:,}")
+    logger.info(
+        f"Target records: {args.records:,} | Batch size: {args.batch_size:,}"
+    )
     start = time.time()
 
     try:
@@ -253,14 +347,17 @@ def main() -> None:
             written += n
             batch_no += 1
 
-            mem_mb = process.memory_info().rss / 1024 ** 2
+            mem_mb = process.memory_info().rss / 1024**2
             peak_mem_mb = max(peak_mem_mb, mem_mb)
             rate = written / (time.time() - start)
-            logger.info(f"Batch {batch_no} written | {written:,}/{args.records:,} records "
-                        f"| {rate:,.0f} rec/s | memory {mem_mb:,.0f} MB")
+            logger.info(
+                f"Batch {batch_no} written | "
+                f"{written:,}/{args.records:,} records "
+                f"| {rate:,.0f} rec/s | memory {mem_mb:,.0f} MB"
+            )
 
         duration = time.time() - start
-        size_gb = dir_size_bytes(config.RAW_DIR) / 1024 ** 3
+        size_gb = dir_size_bytes(config.RAW_DIR) / 1024**3
         n_files = sum(1 for _ in config.RAW_DIR.rglob("*.parquet"))
 
         logger.info("Data generation completed successfully")

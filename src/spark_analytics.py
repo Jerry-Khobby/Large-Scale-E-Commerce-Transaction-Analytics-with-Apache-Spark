@@ -22,18 +22,26 @@ from pyspark.sql import DataFrame, SparkSession, Window
 from pyspark.sql import functions as F
 
 import config
-from utils import (ensure_dirs, get_logger, get_spark_session, save_csv,
-                   save_explain, timer)
+from utils import (
+    ensure_dirs,
+    get_logger,
+    get_spark_session,
+    save_csv,
+    save_explain,
+    timer,
+)
 
 logger = get_logger("SparkAnalytics", "spark_analytics.log")
 
 
 def publish(df: DataFrame, name: str, n: int = 20) -> DataFrame:
-    """Round decimals, show a result, save it to data/analytics/<name>/ and return it."""
-    df = df.select(*[
-        F.round(c, 2).alias(c) if t in ("double", "float") else F.col(c)
-        for c, t in df.dtypes
-    ])
+    """Round decimals, show a result, save it to data/analytics/<name>/."""
+    df = df.select(
+        *[
+            F.round(c, 2).alias(c) if t in ("double", "float") else F.col(c)
+            for c, t in df.dtypes
+        ]
+    )
     df.show(n, truncate=False)
     save_csv(df, name)
     logger.info(f"Saved {name}")
@@ -50,41 +58,67 @@ def successful(df: DataFrame) -> DataFrame:
 def revenue_analysis(df: DataFrame) -> None:
     ok = successful(df)
 
-    publish(ok.groupBy("country")
-            .agg(F.sum("total_amount").alias("total_revenue"),
-                 F.count("transaction_id").alias("transaction_count"),
-                 F.avg("total_amount").alias("avg_order_value"))
-            .orderBy(F.desc("total_revenue")).limit(20),
-            "revenue_by_country")
+    publish(
+        ok.groupBy("country")
+        .agg(
+            F.sum("total_amount").alias("total_revenue"),
+            F.count("transaction_id").alias("transaction_count"),
+            F.avg("total_amount").alias("avg_order_value"),
+        )
+        .orderBy(F.desc("total_revenue"))
+        .limit(20),
+        "revenue_by_country",
+    )
 
-    publish(ok.withColumn("year_month", F.date_format("transaction_timestamp", "yyyy-MM"))
-            .groupBy("year_month")
-            .agg(F.sum("total_amount").alias("monthly_revenue"),
-                 F.count("transaction_id").alias("transaction_count"),
-                 F.avg("total_amount").alias("avg_order_value"))
-            .orderBy("year_month"),
-            "monthly_revenue_trend", n=36)
+    publish(
+        ok.withColumn(
+            "year_month", F.date_format("transaction_timestamp", "yyyy-MM")
+        )
+        .groupBy("year_month")
+        .agg(
+            F.sum("total_amount").alias("monthly_revenue"),
+            F.count("transaction_id").alias("transaction_count"),
+            F.avg("total_amount").alias("avg_order_value"),
+        )
+        .orderBy("year_month"),
+        "monthly_revenue_trend",
+        n=36,
+    )
 
     # Percentage of total computed with a window over the grouped result
     # (avoids a separate collect() inside the aggregation).
-    publish(ok.groupBy("payment_method")
-            .agg(F.sum("total_amount").alias("total_revenue"),
-                 F.count("transaction_id").alias("transaction_count"),
-                 F.avg("total_amount").alias("avg_order_value"))
-            .withColumn("revenue_percentage",
-                        F.round(100 * F.col("total_revenue")
-                                / F.sum("total_revenue").over(Window.partitionBy()), 2))
-            .orderBy(F.desc("total_revenue")),
-            "revenue_by_payment")
+    publish(
+        ok.groupBy("payment_method")
+        .agg(
+            F.sum("total_amount").alias("total_revenue"),
+            F.count("transaction_id").alias("transaction_count"),
+            F.avg("total_amount").alias("avg_order_value"),
+        )
+        .withColumn(
+            "revenue_percentage",
+            F.round(
+                100
+                * F.col("total_revenue")
+                / F.sum("total_revenue").over(Window.partitionBy()),
+                2,
+            ),
+        )
+        .orderBy(F.desc("total_revenue")),
+        "revenue_by_payment",
+    )
 
-    publish(ok.groupBy("product_category")
-            .agg(F.sum("total_amount").alias("total_revenue"),
-                 F.count("transaction_id").alias("transactions"),
-                 F.sum("quantity").alias("units_sold"),
-                 F.avg("price").alias("avg_price"),
-                 F.avg("total_amount").alias("avg_order_value"))
-            .orderBy(F.desc("total_revenue")),
-            "revenue_by_category")
+    publish(
+        ok.groupBy("product_category")
+        .agg(
+            F.sum("total_amount").alias("total_revenue"),
+            F.count("transaction_id").alias("transactions"),
+            F.sum("quantity").alias("units_sold"),
+            F.avg("price").alias("avg_price"),
+            F.avg("total_amount").alias("avg_order_value"),
+        )
+        .orderBy(F.desc("total_revenue")),
+        "revenue_by_category",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -92,32 +126,56 @@ def revenue_analysis(df: DataFrame) -> None:
 # ---------------------------------------------------------------------------
 def product_analysis(df: DataFrame) -> None:
     product_stats = (
-        successful(df).groupBy("product_name", "product_category")
-        .agg(F.sum("total_amount").alias("total_revenue"),
-             F.sum("quantity").alias("units_sold"),
-             F.count("transaction_id").alias("order_count"),
-             F.avg("price").alias("avg_price"))
+        successful(df)
+        .groupBy("product_name", "product_category")
+        .agg(
+            F.sum("total_amount").alias("total_revenue"),
+            F.sum("quantity").alias("units_sold"),
+            F.count("transaction_id").alias("order_count"),
+            F.avg("price").alias("avg_price"),
+        )
     )
 
-    publish(product_stats.orderBy(F.desc("total_revenue")).limit(20), "top_products_revenue")
-    publish(product_stats.orderBy(F.desc("units_sold")).limit(20), "top_products_quantity")
+    publish(
+        product_stats.orderBy(F.desc("total_revenue")).limit(20),
+        "top_products_revenue",
+    )
+    publish(
+        product_stats.orderBy(F.desc("units_sold")).limit(20),
+        "top_products_quantity",
+    )
 
-    publish(df.groupBy("product_category")
-            .agg(F.avg("price").alias("avg_price"),
-                 F.min("price").alias("min_price"),
-                 F.max("price").alias("max_price"),
-                 F.countDistinct("product_name").alias("distinct_products"))
-            .orderBy(F.desc("avg_price")),
-            "avg_price_by_category")
+    publish(
+        df.groupBy("product_category")
+        .agg(
+            F.avg("price").alias("avg_price"),
+            F.min("price").alias("min_price"),
+            F.max("price").alias("max_price"),
+            F.countDistinct("product_name").alias("distinct_products"),
+        )
+        .orderBy(F.desc("avg_price")),
+        "avg_price_by_category",
+    )
 
-    publish(df.groupBy("product_name", "product_category")
-            .agg(F.count("transaction_id").alias("total_transactions"),
-                 F.sum(F.when(F.col("status") == "FAILED", 1).otherwise(0)).alias("failed_count"))
-            .withColumn("failure_rate_pct",
-                        F.round(100 * F.col("failed_count") / F.col("total_transactions"), 2))
-            .filter(F.col("total_transactions") >= 100)
-            .orderBy(F.desc("failure_rate_pct")).limit(20),
-            "product_failure_rates")
+    publish(
+        df.groupBy("product_name", "product_category")
+        .agg(
+            F.count("transaction_id").alias("total_transactions"),
+            F.sum(F.when(F.col("status") == "FAILED", 1).otherwise(0)).alias(
+                "failed_count"
+            ),
+        )
+        .withColumn(
+            "failure_rate_pct",
+            F.round(
+                100 * F.col("failed_count") / F.col("total_transactions"), 2
+            ),
+        )
+        .filter(F.col("total_transactions") >= 100)
+        .orderBy(F.desc("failure_rate_pct"))
+        .limit(20),
+        "product_failure_rates",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -125,90 +183,137 @@ def product_analysis(df: DataFrame) -> None:
 # ---------------------------------------------------------------------------
 def customer_analysis(df: DataFrame) -> None:
     customer_spend = (
-        successful(df).groupBy("customer_id", "customer_name", "country")
-        .agg(F.sum("total_amount").alias("total_spent"),
-             F.count("transaction_id").alias("order_count"),
-             F.avg("total_amount").alias("avg_order_value"),
-             F.sum("quantity").alias("total_items"))
+        successful(df)
+        .groupBy("customer_id", "customer_name", "country")
+        .agg(
+            F.sum("total_amount").alias("total_spent"),
+            F.count("transaction_id").alias("order_count"),
+            F.avg("total_amount").alias("avg_order_value"),
+            F.sum("quantity").alias("total_items"),
+        )
     )
 
-    publish(customer_spend.orderBy(F.desc("total_spent")).limit(50), "top_customers", n=50)
+    publish(
+        customer_spend.orderBy(F.desc("total_spent")).limit(50),
+        "top_customers",
+        n=50,
+    )
 
-    publish(customer_spend.select(
-                F.count("customer_id").alias("customers"),
-                F.avg("avg_order_value").alias("mean_avg_order_value"),
-                F.expr("percentile_approx(avg_order_value, 0.5)").alias("median_avg_order_value"),
-                F.min("avg_order_value").alias("min_avg_order_value"),
-                F.max("avg_order_value").alias("max_avg_order_value")),
-            "avg_order_value_per_customer")
+    publish(
+        customer_spend.select(
+            F.count("customer_id").alias("customers"),
+            F.avg("avg_order_value").alias("mean_avg_order_value"),
+            F.expr("percentile_approx(avg_order_value, 0.5)").alias(
+                "median_avg_order_value"
+            ),
+            F.min("avg_order_value").alias("min_avg_order_value"),
+            F.max("avg_order_value").alias("max_avg_order_value"),
+        ),
+        "avg_order_value_per_customer",
+    )
 
-    publish(df.groupBy("customer_id")
-            .agg(F.count("transaction_id").alias("purchase_count"))
-            .groupBy("purchase_count")
-            .agg(F.count("customer_id").alias("customer_count"))
-            .orderBy("purchase_count"),
-            "purchase_frequency_distribution", n=50)
+    publish(
+        df.groupBy("customer_id")
+        .agg(F.count("transaction_id").alias("purchase_count"))
+        .groupBy("purchase_count")
+        .agg(F.count("customer_id").alias("customer_count"))
+        .orderBy("purchase_count"),
+        "purchase_frequency_distribution",
+        n=50,
+    )
 
-    publish(df.groupBy("customer_id", "customer_name")
-            .agg(F.count("*").alias("transactions"),
-                 F.sum(F.when(F.col("status") == "SUCCESS", 1).otherwise(0)).alias("successes"))
-            .filter(F.col("successes") == 0)
-            .drop("successes")
-            .orderBy(F.desc("transactions")),
-            "customers_only_failed")
+    publish(
+        df.groupBy("customer_id", "customer_name")
+        .agg(
+            F.count("*").alias("transactions"),
+            F.sum(F.when(F.col("status") == "SUCCESS", 1).otherwise(0)).alias(
+                "successes"
+            ),
+        )
+        .filter(F.col("successes") == 0)
+        .drop("successes")
+        .orderBy(F.desc("transactions")),
+        "customers_only_failed",
+    )
 
 
 # ---------------------------------------------------------------------------
 # Query group 4 - Time-based (Spark SQL)
 # ---------------------------------------------------------------------------
 def time_analysis(spark: SparkSession) -> None:
-    """Time-based queries written in Spark SQL against the `transactions` view."""
-    publish(spark.sql("""
-        SELECT transaction_hour, COUNT(*) AS transactions, SUM(revenue) AS revenue
+    """Time-based queries in Spark SQL against the `transactions` view."""
+    publish(
+        spark.sql("""
+        SELECT transaction_hour, COUNT(*) AS transactions,
+               SUM(revenue) AS revenue
         FROM transactions
         GROUP BY transaction_hour
         ORDER BY transaction_hour
-    """), "transactions_by_hour", n=24)
+    """),
+        "transactions_by_hour",
+        n=24,
+    )
 
-    publish(spark.sql("""
-        SELECT day_of_week_num, day_of_week, COUNT(*) AS transactions, SUM(revenue) AS revenue
+    publish(
+        spark.sql("""
+        SELECT day_of_week_num, day_of_week, COUNT(*) AS transactions,
+               SUM(revenue) AS revenue
         FROM transactions
         GROUP BY day_of_week_num, day_of_week
         ORDER BY day_of_week_num
-    """), "transactions_by_day_of_week")
+    """),
+        "transactions_by_day_of_week",
+    )
 
-    publish(spark.sql("""
+    publish(
+        spark.sql("""
         SELECT year, month, COUNT(*) AS transactions, SUM(revenue) AS revenue
         FROM transactions
         GROUP BY year, month
         ORDER BY transactions DESC
         LIMIT 10
-    """), "peak_months")
+    """),
+        "peak_months",
+    )
 
-    publish(spark.sql("""
+    publish(
+        spark.sql("""
         SELECT year, quarter,
                COUNT(*) AS transactions,
-               ROUND(100 * AVG(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END), 2)
+               ROUND(100 * AVG(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END),
+                     2)
                    AS success_rate_pct
         FROM transactions
         GROUP BY year, quarter
         ORDER BY year, quarter
-    """), "success_rate_by_quarter")
+    """),
+        "success_rate_by_quarter",
+    )
 
     # Inputs for the heatmap and order-value histogram visualisations
-    publish(spark.sql("""
-        SELECT day_of_week_num, day_of_week, transaction_hour, COUNT(*) AS transactions
+    publish(
+        spark.sql("""
+        SELECT day_of_week_num, day_of_week, transaction_hour,
+               COUNT(*) AS transactions
         FROM transactions
         GROUP BY day_of_week_num, day_of_week, transaction_hour
-    """), "hour_day_heatmap", n=5)
+    """),
+        "hour_day_heatmap",
+        n=5,
+    )
 
-    publish(spark.sql("""
-        SELECT FLOOR(total_amount / 50) * 50 AS order_value_bucket, COUNT(*) AS orders
+    publish(
+        spark.sql("""
+        SELECT FLOOR(total_amount / 50) * 50 AS order_value_bucket,
+               COUNT(*) AS orders
         FROM transactions
         WHERE status = 'SUCCESS'
         GROUP BY FLOOR(total_amount / 50) * 50
         ORDER BY order_value_bucket
-    """), "order_value_distribution", n=50)
+    """),
+        "order_value_distribution",
+        n=50,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -218,17 +323,18 @@ def running_total_dataframe(df: DataFrame) -> DataFrame:
     """Monthly revenue with a running total, written with the DataFrame API."""
     monthly = (
         successful(df)
-        .withColumn("year_month",
-                    F.date_format("transaction_timestamp", "yyyy-MM"))
+        .withColumn(
+            "year_month", F.date_format("transaction_timestamp", "yyyy-MM")
+        )
         .groupBy("year_month")
         .agg(F.sum("total_amount").alias("monthly_revenue"))
     )
-    running = (Window.orderBy("year_month")
-               .rowsBetween(Window.unboundedPreceding, 0))
-    return (monthly
-            .withColumn("running_total",
-                        F.sum("monthly_revenue").over(running))
-            .orderBy("year_month"))
+    running = Window.orderBy("year_month").rowsBetween(
+        Window.unboundedPreceding, 0
+    )
+    return monthly.withColumn(
+        "running_total", F.sum("monthly_revenue").over(running)
+    ).orderBy("year_month")
 
 
 RUNNING_TOTAL_SQL = """
@@ -253,8 +359,9 @@ def _operator_tree(plan_file) -> str:
     return re.sub(r"\s*\(\d+\)", "", tree)
 
 
-def compare_api_vs_sql(spark: SparkSession, df: DataFrame,
-                       runs: int = 3) -> list[dict]:
+def compare_api_vs_sql(
+    spark: SparkSession, df: DataFrame, runs: int = 3
+) -> list[dict]:
     """
     Run the same running-total query through the DataFrame API and Spark
     SQL, save both execution plans, and check that results and physical
@@ -262,10 +369,14 @@ def compare_api_vs_sql(spark: SparkSession, df: DataFrame,
     same DataFrame would reuse its shuffle files) and the two approaches
     alternate so neither always benefits from a warmer file cache.
     """
-    builders = {"dataframe_api": lambda: running_total_dataframe(df),
-                "spark_sql": lambda: spark.sql(RUNNING_TOTAL_SQL)}
-    trees = {name: _operator_tree(save_explain(build(), f"running_total_{name}"))
-             for name, build in builders.items()}
+    builders = {
+        "dataframe_api": lambda: running_total_dataframe(df),
+        "spark_sql": lambda: spark.sql(RUNNING_TOTAL_SQL),
+    }
+    trees = {
+        name: _operator_tree(save_explain(build(), f"running_total_{name}"))
+        for name, build in builders.items()
+    }
 
     times = {name: [] for name in builders}
     rows = {}
@@ -279,15 +390,23 @@ def compare_api_vs_sql(spark: SparkSession, df: DataFrame,
     same_plan = trees["dataframe_api"] == trees["spark_sql"]
     results = []
     for name, secs in times.items():
-        logger.info(f"Running total via {name}: "
-                    + ", ".join(f"{t:.1f}s" for t in secs))
-        results.append({"approach": name,
-                        "run_seconds": " ".join(f"{t:.2f}" for t in secs),
-                        "median_seconds": round(statistics.median(secs), 2),
-                        "rows": len(rows[name]), "results_match": same_rows,
-                        "same_physical_operators": same_plan})
-    logger.info(f"Same results: {same_rows} | "
-                f"same physical operators: {same_plan}")
+        logger.info(
+            f"Running total via {name}: "
+            + ", ".join(f"{t:.1f}s" for t in secs)
+        )
+        results.append(
+            {
+                "approach": name,
+                "run_seconds": " ".join(f"{t:.2f}" for t in secs),
+                "median_seconds": round(statistics.median(secs), 2),
+                "rows": len(rows[name]),
+                "results_match": same_rows,
+                "same_physical_operators": same_plan,
+            }
+        )
+    logger.info(
+        f"Same results: {same_rows} | " f"same physical operators: {same_plan}"
+    )
 
     out = config.REPORTS_DIR / "dataframe_vs_sql.csv"
     with open(out, "w", newline="", encoding="utf-8") as fh:
@@ -300,21 +419,30 @@ def compare_api_vs_sql(spark: SparkSession, df: DataFrame,
 
 def window_analysis(spark: SparkSession, df: DataFrame) -> None:
     product_revenue = (
-        successful(df).groupBy("product_category", "product_name")
+        successful(df)
+        .groupBy("product_category", "product_name")
         .agg(F.sum("total_amount").alias("total_revenue"))
     )
-    rank_window = Window.partitionBy("product_category").orderBy(F.desc("total_revenue"))
-    publish(product_revenue.withColumn("rank_in_category", F.dense_rank().over(rank_window))
-            .filter(F.col("rank_in_category") <= 10)
-            .orderBy("product_category", "rank_in_category"),
-            "product_rank_in_category", n=30)
+    rank_window = Window.partitionBy("product_category").orderBy(
+        F.desc("total_revenue")
+    )
+    publish(
+        product_revenue.withColumn(
+            "rank_in_category", F.dense_rank().over(rank_window)
+        )
+        .filter(F.col("rank_in_category") <= 10)
+        .orderBy("product_category", "rank_in_category"),
+        "product_rank_in_category",
+        n=30,
+    )
 
     # Running total - DataFrame API (the SQL version is in compare_api_vs_sql)
     publish(running_total_dataframe(df), "running_revenue_by_month", n=36)
     compare_api_vs_sql(spark, df)
 
     # Customers spending above the average customer
-    publish(spark.sql("""
+    publish(
+        spark.sql("""
         WITH spend AS (
             SELECT customer_id, customer_name, SUM(revenue) AS total_spent
             FROM transactions
@@ -328,7 +456,9 @@ def window_analysis(spark: SparkSession, df: DataFrame) -> None:
         FROM with_avg
         WHERE total_spent > avg_customer_spend
         ORDER BY total_spent DESC
-    """), "above_average_customers")
+    """),
+        "above_average_customers",
+    )
 
 
 def export_query_results() -> None:
@@ -339,7 +469,9 @@ def export_query_results() -> None:
     """
     out_dir = config.OUTPUTS_DIR / "query_results"
     out_dir.mkdir(parents=True, exist_ok=True)
-    for result_dir in sorted(p for p in config.ANALYTICS_DIR.iterdir() if p.is_dir()):
+    for result_dir in sorted(
+        p for p in config.ANALYTICS_DIR.iterdir() if p.is_dir()
+    ):
         parts = sorted(result_dir.glob("part-*.csv"))
         if parts:
             shutil.copyfile(parts[0], out_dir / f"{result_dir.name}.csv")

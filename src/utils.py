@@ -31,9 +31,13 @@ def get_logger(name: str, log_file: str) -> logging.Logger:
     logger.setLevel(logging.INFO)
 
     if not logger.handlers:
-        formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s | %(levelname)s | %(message)s"
+        )
 
-        file_handler = logging.FileHandler(config.LOG_DIR / log_file, encoding="utf-8")
+        file_handler = logging.FileHandler(
+            config.LOG_DIR / log_file, encoding="utf-8"
+        )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
@@ -46,21 +50,26 @@ def get_logger(name: str, log_file: str) -> logging.Logger:
     return logger
 
 
-def get_spark_session(app_name: str, master: str = config.SPARK_MASTER, **extra_conf):
+def get_spark_session(
+    app_name: str, master: str = config.SPARK_MASTER, **extra_conf
+):
     """
     Build (or reuse) a SparkSession with the project's default configuration.
 
     Extra Spark settings can be passed as keyword arguments, using underscores
     instead of dots, e.g. ``spark_sql_adaptive_enabled="false"``.
     """
-    from pyspark.sql import SparkSession  # imported lazily: not every script needs Spark
+    from pyspark.sql import (
+        SparkSession,
+    )  # imported lazily: not every script needs Spark
 
     builder = (
-        SparkSession.builder
-        .appName(app_name)
+        SparkSession.builder.appName(app_name)
         .master(master)
         .config("spark.driver.memory", config.SPARK_DRIVER_MEMORY)
-        .config("spark.sql.shuffle.partitions", config.SPARK_SHUFFLE_PARTITIONS)
+        .config(
+            "spark.sql.shuffle.partitions", config.SPARK_SHUFFLE_PARTITIONS
+        )
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.ui.showConsoleProgress", "false")
     )
@@ -73,8 +82,10 @@ def get_spark_session(app_name: str, master: str = config.SPARK_MASTER, **extra_
 
 
 @contextmanager
-def timer(label: str, logger: logging.Logger, results: dict | None = None) -> Iterator[None]:
-    """Log how long the wrapped block took; optionally store it in ``results[label]``."""
+def timer(
+    label: str, logger: logging.Logger, results: dict | None = None
+) -> Iterator[None]:
+    """Log how long the block took; optionally store it in ``results``."""
     start = time.perf_counter()
     yield
     elapsed = time.perf_counter() - start
@@ -84,7 +95,7 @@ def timer(label: str, logger: logging.Logger, results: dict | None = None) -> It
 
 
 def save_csv(df, name: str, base_dir: Path = config.ANALYTICS_DIR) -> Path:
-    """Write a (small, aggregated) Spark DataFrame to ``base_dir/<name>/`` as one CSV file."""
+    """Write a small, aggregated DataFrame to ``base_dir/<name>/`` as CSV."""
     out_path = base_dir / name
     (
         df.coalesce(1)
@@ -96,7 +107,7 @@ def save_csv(df, name: str, base_dir: Path = config.ANALYTICS_DIR) -> Path:
 
 
 def save_explain(df, name: str) -> Path:
-    """Write ``df.explain('formatted')`` to ``outputs/reports/explain_<name>.txt``."""
+    """Save ``df.explain('formatted')`` as reports/explain_<name>.txt."""
     buffer = io.StringIO()
     with redirect_stdout(buffer):
         df.explain(mode="formatted")

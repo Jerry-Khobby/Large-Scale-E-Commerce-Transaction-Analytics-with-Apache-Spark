@@ -27,8 +27,12 @@ REPORTS_DIR = OUTPUTS_DIR / "reports"
 LOG_DIR = PROJECT_ROOT / "logs"
 
 ALL_DIRS = [
-    RAW_DIR, CLEANED_DIR, ANALYTICS_DIR,
-    VISUALIZATIONS_DIR, REPORTS_DIR, LOG_DIR,
+    RAW_DIR,
+    CLEANED_DIR,
+    ANALYTICS_DIR,
+    VISUALIZATIONS_DIR,
+    REPORTS_DIR,
+    LOG_DIR,
 ]
 
 # ---------------------------------------------------------------------------
@@ -42,21 +46,32 @@ START_DATE = datetime(2022, 1, 1)
 END_DATE = datetime(2024, 12, 31, 23, 59, 59)
 
 PRODUCT_CATEGORIES = [
-    "Electronics", "Fashion", "Home & Garden", "Sports",
-    "Books", "Beauty", "Toys", "Food",
+    "Electronics",
+    "Fashion",
+    "Home & Garden",
+    "Sports",
+    "Books",
+    "Beauty",
+    "Toys",
+    "Food",
 ]
 
-PAYMENT_METHODS = ["Credit Card", "Debit Card", "Mobile Money", "Bank Transfer"]
+PAYMENT_METHODS = [
+    "Credit Card",
+    "Debit Card",
+    "Mobile Money",
+    "Bank Transfer",
+]
 PAYMENT_WEIGHTS = [0.40, 0.30, 0.20, 0.10]
 
 STATUSES = ["SUCCESS", "FAILED"]
 STATUS_WEIGHTS = [0.85, 0.15]
 
 # Intentional data-quality issues (fractions of all records)
-NULL_RATE = 0.04            # missing city / email (3-5%)
-DUPLICATE_RATE = 0.015      # duplicate transaction_ids (1-2%)
-NEGATIVE_RATE = 0.005       # negative price or quantity (0.5%)
-MISMATCH_RATE = 0.02        # total_amount != price * quantity (2%)
+NULL_RATE = 0.04  # missing city / email (3-5%)
+DUPLICATE_RATE = 0.015  # duplicate transaction_ids (1-2%)
+NEGATIVE_RATE = 0.005  # negative price or quantity (0.5%)
+MISMATCH_RATE = 0.02  # total_amount != price * quantity (2%)
 
 # ---------------------------------------------------------------------------
 # Spark
