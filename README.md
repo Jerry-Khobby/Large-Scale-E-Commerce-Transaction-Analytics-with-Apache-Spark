@@ -130,6 +130,10 @@ Details and discussion are in [PROJECT_REPORT.md](PROJECT_REPORT.md).
 Execution plans: [explain_baseline.txt](outputs/reports/explain_baseline.txt) (SortMergeJoin)
 vs [explain_optimized.txt](outputs/reports/explain_optimized.txt) (BroadcastHashJoin over InMemoryTableScan).
 
+DataFrame API vs Spark SQL: the same running-total query written both ways gives
+identical results and the same physical plan; median times were 5.9 s vs 5.0 s, which
+is within run-to-run noise ([dataframe_vs_sql.csv](outputs/reports/dataframe_vs_sql.csv)).
+
 ### Outputs
 
 - `outputs/query_results/` - 21 analytics results as CSV

@@ -150,6 +150,32 @@ The speed-up is well below 4x because the query has shuffle stages and file I/O 
 do not parallelise perfectly. `local[1]` also ran first, against colder file caches,
 which slightly favours `local[4]`.
 
+**DataFrame API vs Spark SQL**
+([dataframe_vs_sql.csv](outputs/reports/dataframe_vs_sql.csv)). The monthly
+running-total query was written both ways and run three times each on the 24.5M
+cleaned rows, alternating the two approaches and building a fresh query each run:
+
+| Approach | Runs (s) | Median |
+|----------|----------|--------|
+| DataFrame API | 14.8, 5.9, 5.4 | 5.9 s |
+| Spark SQL | 6.5, 5.0, 4.9 | 5.0 s |
+
+Both return the same 36 rows, and both compile to the same physical plan
+(scan with pushed-down `status = 'SUCCESS'` filter, partial and final
+`HashAggregate`, single-partition `Window`). The only plan difference is naming:
+SQL's `GROUP BY 1` becomes an internal `_groupingexpression` column
+([DataFrame plan](outputs/reports/explain_running_total_dataframe_api.txt),
+[SQL plan](outputs/reports/explain_running_total_spark_sql.txt)). Both go through
+the same Catalyst optimiser, so the ~1 s gap is run-to-run noise (the first
+DataFrame run also paid for a cold file cache), not a real speed difference.
+The choice is about readability: SQL is clearer for set-based reporting with
+CTEs and is familiar to analysts, while the DataFrame API composes better in
+Python, with reusable functions such as `successful(df)`, IDE checks and no
+query strings. One trap: a SQL window with only `ORDER BY` defaults to a `RANGE`
+frame, which treats ties as one group. The SQL version states
+`ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` so that it matches the
+DataFrame version's `rowsBetween`.
+
 **Stage timings on the full data**: load and explore 197 s, quality assessment 708 s,
 cleaning and write 1,469 s; analytics query groups 69-209 s each
 ([analytics_timings.csv](outputs/reports/analytics_timings.csv)).
