@@ -1,0 +1,24 @@
+2026-11-16 13:22:33,154 | INFO | Total records: 25,000,000
+2026-11-16 13:22:33,305 | INFO | Number of partitions: 78
+2026-11-16 13:22:33,306 | INFO | Column types: transaction_id=string, customer_id=string, customer_name=string, email=string, country=string, city=string, product_category=string, product_name=string, price=double, quantity=int, total_amount=double, payment_method=string, status=string, transaction_timestamp=timestamp_ntz
+2026-11-16 13:25:13,001 | INFO | Stage 3 - load & explore finished in 197.06s
+2026-11-16 13:37:00,619 | INFO |   null_email                        1,000,859  (4.003%)
+2026-11-16 13:37:00,677 | INFO |   null_city                         1,000,985  (4.004%)
+2026-11-16 13:37:00,680 | INFO |   negative_or_zero_price               62,863  (0.251%)
+2026-11-16 13:37:00,696 | INFO |   negative_or_zero_quantity            61,969  (0.248%)
+2026-11-16 13:37:00,697 | INFO |   total_amount_mismatch               499,379  (1.998%)
+2026-11-16 13:37:00,697 | INFO |   duplicate_transaction_id            375,000  (1.5%)
+2026-11-16 13:37:00,698 | INFO |   price_outlier_z_gt_3                698,852  (2.795%)
+2026-11-16 13:37:00,699 | INFO |   QUALITY_SCORE_PCT                22,090,487  (88.36%)
+2026-11-16 13:37:00,699 | INFO | Data quality score: 88.36%
+2026-11-16 13:37:00,789 | INFO | Report written to /app/outputs/reports/data_quality_report.csv
+2026-11-16 13:37:00,791 | INFO | Stage 4 - quality assessment finished in 707.91s
+2026-11-16 13:58:44,583 | INFO | Cleaned data written to /app/data/cleaned
+2026-11-16 14:01:29,740 | INFO | Validation bad_price: 0
+2026-11-16 14:01:29,743 | INFO | Validation bad_quantity: 0
+2026-11-16 14:01:29,744 | INFO | Validation nulls: 0
+2026-11-16 14:01:29,744 | INFO | Validation mismatch: 0
+2026-11-16 14:01:29,745 | INFO | Validation duplicates: 0
+2026-11-16 14:01:29,747 | INFO | Stage 5 - clean & save finished in 1469.13s
+2026-11-16 14:01:29,750 | INFO | Rows before: 25,000,000 | after: 24,502,089 | removed: 497,911 (1.99%)
+2026-11-16 14:01:29,834 | INFO | Report written to /app/outputs/reports/cleaning_summary.csv

@@ -1,0 +1,7 @@
+metric,value
+rows_before,25000000
+rows_after,24502089
+rows_removed,497911
+seconds_Stage 3 - load & explore,197.06
+seconds_Stage 4 - quality assessment,707.91
+seconds_Stage 5 - clean & save,1469.13
