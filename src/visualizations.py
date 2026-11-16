@@ -18,6 +18,7 @@ import matplotlib
 matplotlib.use("Agg")  # headless: write files, never open windows
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
+import psutil  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 from matplotlib.ticker import FuncFormatter  # noqa: E402
 
@@ -160,10 +161,30 @@ def hour_day_heatmap() -> None:
     save(fig, "06_hour_day_heatmap.png")
 
 
+def pandas_memory_trace() -> None:
+    """Memory of the Pandas full-load attempt over time (from pandas_test.py)."""
+    trace_file = config.REPORTS_DIR / "pandas_memory_trace.csv"
+    if not trace_file.exists():
+        raise FileNotFoundError("No memory trace - run pandas_test.py first")
+    df = pd.read_csv(trace_file)
+    total_gb = psutil.virtual_memory().total / 1024 ** 3
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df["seconds"], df["pandas_process_mb"] / 1024, color=PRIMARY, linewidth=2)
+    ax.axhline(total_gb, color=MUTED, linewidth=1, linestyle="--")
+    ax.annotate(f"Machine RAM ({total_gb:.1f} GB)", (df["seconds"].iloc[0], total_gb),
+                xytext=(0, 6), textcoords="offset points", color=INK_SECONDARY, fontsize=9)
+    ax.set_ylim(0, total_gb * 1.1)
+    ax.grid(axis="x", visible=False)
+    ax.set_title("Pandas full-dataset load: process memory over time")
+    ax.set_xlabel("Seconds since load started")
+    ax.set_ylabel("Pandas process memory (GB)")
+    save(fig, "07_pandas_memory_trace.png")
+
+
 def main() -> None:
     ensure_dirs()
     charts = [top_countries, monthly_trend, payment_methods,
-              top_products, order_value_histogram, hour_day_heatmap]
+              top_products, order_value_histogram, hour_day_heatmap, pandas_memory_trace]
     failed = 0
     for chart in charts:
         try:
