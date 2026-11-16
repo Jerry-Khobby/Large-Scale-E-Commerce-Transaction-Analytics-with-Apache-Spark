@@ -5,6 +5,11 @@ Stage 2 - Demonstrate the limits of Pandas on the full dataset.
 2. Attempt to load the *entire* raw dataset with Pandas, recording load time,
    memory growth and any ``MemoryError``.
 
+The full load runs in a child process watched by a memory guard: if system
+memory usage passes ``--max-system-mem-pct`` the child is killed, so the
+demonstration cannot freeze the machine by pushing it into heavy swapping.
+Memory is sampled every 0.5 s to ``outputs/reports/pandas_memory_trace.csv``.
+
 Results are logged to ``logs/pandas_test.log`` and saved to
 ``outputs/reports/pandas_test_results.csv`` for the README / report.
 
@@ -19,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import multiprocessing as mp
 import time
 
 import pandas as pd
@@ -29,12 +35,11 @@ import config
 from utils import dir_size_bytes, ensure_dirs, get_logger
 
 logger = get_logger("PandasTest", "pandas_test.log")
-process = psutil.Process()
 
 
-def rss_mb() -> float:
-    """Current resident memory of this process in MB."""
-    return process.memory_info().rss / 1024 ** 2
+def rss_mb(process: psutil.Process | None = None) -> float:
+    """Resident memory of ``process`` (default: this one) in MB."""
+    return (process or psutil.Process()).memory_info().rss / 1024 ** 2
 
 
 def load_sample(n_rows: int) -> dict:
@@ -50,37 +55,82 @@ def load_sample(n_rows: int) -> dict:
     df_mb = df.memory_usage(deep=True).sum() / 1024 ** 2
     logger.info(f"[sample] Loaded {len(df):,} rows in {elapsed:.2f}s | "
                 f"DataFrame {df_mb:,.0f} MB | process +{rss_mb() - mem_before:,.0f} MB")
-    result = {"test": f"sample_{n_rows}", "rows": len(df), "status": "SUCCESS",
+    result = {"test": f"pandas_sample_{n_rows}", "rows": len(df), "status": "SUCCESS",
               "load_seconds": round(elapsed, 2), "dataframe_mb": round(df_mb, 1),
               "peak_process_mb": round(rss_mb(), 1)}
     del df
     return result
 
 
-def load_full() -> dict:
-    """Try to load the entire raw dataset into a single Pandas DataFrame."""
+def _full_load_worker(raw_dir: str, queue: mp.Queue) -> None:
+    """Child process: read the whole dataset with Pandas and report back."""
+    start = time.perf_counter()
+    try:
+        df = pd.read_parquet(raw_dir, engine="pyarrow")
+        queue.put({"status": "SUCCESS", "rows": len(df),
+                   "load_seconds": time.perf_counter() - start,
+                   "dataframe_mb": df.memory_usage(deep=True).sum() / 1024 ** 2})
+    except MemoryError:
+        queue.put({"status": "MemoryError", "rows": None,
+                   "load_seconds": time.perf_counter() - start, "dataframe_mb": None})
+
+
+def load_full(max_system_mem_pct: float) -> dict:
+    """Try to load the entire raw dataset into one Pandas DataFrame, under a memory guard."""
     on_disk_gb = dir_size_bytes(config.RAW_DIR) / 1024 ** 3
     total_ram_gb = psutil.virtual_memory().total / 1024 ** 3
     logger.info(f"[full] Dataset on disk: {on_disk_gb:.2f} GB (compressed) | "
-                f"machine RAM: {total_ram_gb:.1f} GB")
+                f"machine RAM: {total_ram_gb:.1f} GB | guard at {max_system_mem_pct}% system memory")
     logger.info("[full] Attempting pd.read_parquet on the full dataset...")
 
+    queue: mp.Queue = mp.Queue()
+    child = mp.Process(target=_full_load_worker, args=(str(config.RAW_DIR), queue))
     start = time.perf_counter()
-    try:
-        df = pd.read_parquet(config.RAW_DIR, engine="pyarrow")
+    child.start()
+    proc = psutil.Process(child.pid)
+
+    trace, peak_mb, outcome = [], 0.0, None
+    while child.is_alive():
+        try:
+            child_mb = rss_mb(proc)
+        except psutil.NoSuchProcess:
+            break
+        sys_pct = psutil.virtual_memory().percent
         elapsed = time.perf_counter() - start
-        df_mb = df.memory_usage(deep=True).sum() / 1024 ** 2
-        logger.info(f"[full] Loaded {len(df):,} rows in {elapsed:.2f}s | "
-                    f"DataFrame {df_mb:,.0f} MB | process {rss_mb():,.0f} MB")
-        return {"test": "full_dataset", "rows": len(df), "status": "SUCCESS",
-                "load_seconds": round(elapsed, 2), "dataframe_mb": round(df_mb, 1),
-                "peak_process_mb": round(rss_mb(), 1)}
-    except MemoryError:
-        elapsed = time.perf_counter() - start
-        logger.error(f"[full] MemoryError after {elapsed:.2f}s - dataset does not fit in RAM")
-        return {"test": "full_dataset", "rows": None, "status": "MemoryError",
-                "load_seconds": round(elapsed, 2), "dataframe_mb": None,
-                "peak_process_mb": round(rss_mb(), 1)}
+        peak_mb = max(peak_mb, child_mb)
+        trace.append({"seconds": round(elapsed, 1), "pandas_process_mb": round(child_mb),
+                      "system_memory_pct": sys_pct})
+
+        if sys_pct >= max_system_mem_pct:
+            child.kill()
+            logger.error(f"[full] ABORTED after {elapsed:.1f}s: system memory at {sys_pct}% "
+                         f"(Pandas process {child_mb:,.0f} MB) - dataset does not fit in RAM")
+            outcome = {"status": f"ABORTED_AT_{max_system_mem_pct:.0f}PCT_RAM", "rows": None,
+                       "load_seconds": elapsed, "dataframe_mb": None}
+            break
+        if not queue.empty():
+            break
+        time.sleep(0.5)
+
+    child.join(timeout=30)
+    if outcome is None:
+        outcome = queue.get() if not queue.empty() else {
+            "status": f"CRASHED (exit code {child.exitcode})", "rows": None,
+            "load_seconds": time.perf_counter() - start, "dataframe_mb": None}
+
+    with open(config.REPORTS_DIR / "pandas_memory_trace.csv", "w", newline="",
+              encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=["seconds", "pandas_process_mb",
+                                                "system_memory_pct"])
+        writer.writeheader()
+        writer.writerows(trace)
+
+    logger.info(f"[full] Result: {outcome['status']} | {outcome['load_seconds']:.1f}s | "
+                f"peak Pandas process memory {peak_mb:,.0f} MB")
+    return {"test": "pandas_full_dataset", "rows": outcome["rows"], "status": outcome["status"],
+            "load_seconds": round(outcome["load_seconds"], 2),
+            "dataframe_mb": round(outcome["dataframe_mb"], 1) if outcome["dataframe_mb"] else None,
+            "peak_process_mb": round(peak_mb, 1)}
 
 
 def save_results(rows: list[dict]) -> None:
@@ -95,6 +145,8 @@ def save_results(rows: list[dict]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Pandas limitation demonstration")
     parser.add_argument("--sample-rows", type=int, default=1_000_000)
+    parser.add_argument("--max-system-mem-pct", type=float, default=90.0,
+                        help="kill the full load when system memory use reaches this %%")
     parser.add_argument("--skip-full", action="store_true",
                         help="only run the sample load")
     args = parser.parse_args()
@@ -106,7 +158,7 @@ def main() -> None:
 
     results = [load_sample(args.sample_rows)]
     if not args.skip_full:
-        results.append(load_full())
+        results.append(load_full(args.max_system_mem_pct))
     save_results(results)
 
 
