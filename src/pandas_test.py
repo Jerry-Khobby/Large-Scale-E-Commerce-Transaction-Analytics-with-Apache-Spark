@@ -42,8 +42,11 @@ def rss_mb(process: psutil.Process | None = None) -> float:
     return (process or psutil.Process()).memory_info().rss / 1024 ** 2
 
 
-def load_sample(n_rows: int) -> dict:
-    """Load the first ``n_rows`` rows of the raw dataset into Pandas."""
+def load_sample(n_rows: int) -> list[dict]:
+    """
+    Load the first ``n_rows`` rows into Pandas, then extrapolate the measured
+    memory footprint and load time to the full dataset.
+    """
     logger.info(f"[sample] Loading {n_rows:,} rows with Pandas")
     mem_before = rss_mb()
     start = time.perf_counter()
@@ -55,11 +58,24 @@ def load_sample(n_rows: int) -> dict:
     df_mb = df.memory_usage(deep=True).sum() / 1024 ** 2
     logger.info(f"[sample] Loaded {len(df):,} rows in {elapsed:.2f}s | "
                 f"DataFrame {df_mb:,.0f} MB | process +{rss_mb() - mem_before:,.0f} MB")
-    result = {"test": f"pandas_sample_{n_rows}", "rows": len(df), "status": "SUCCESS",
-              "load_seconds": round(elapsed, 2), "dataframe_mb": round(df_mb, 1),
-              "peak_process_mb": round(rss_mb(), 1)}
+    results = [{"test": f"pandas_sample_{n_rows}", "rows": len(df), "status": "SUCCESS",
+                "load_seconds": round(elapsed, 2), "dataframe_mb": round(df_mb, 1),
+                "peak_process_mb": round(rss_mb(), 1)}]
+
+    # Project the measured per-row footprint onto the full dataset
+    total_rows = dataset.count_rows()
+    est_mb = df_mb / len(df) * total_rows
+    est_seconds = elapsed / len(df) * total_rows
+    total_ram_mb = psutil.virtual_memory().total / 1024 ** 2
+    logger.info(f"[estimate] Full dataset: {total_rows:,} rows -> ~{est_mb / 1024:,.1f} GB as a "
+                f"Pandas DataFrame ({100 * est_mb / total_ram_mb:.0f}% of total machine RAM), "
+                f"~{est_seconds:,.0f}s to load")
+    results.append({"test": "pandas_full_dataset_estimate", "rows": total_rows,
+                    "status": "EXCEEDS_RAM" if est_mb > total_ram_mb else "FITS_RAM",
+                    "load_seconds": round(est_seconds, 2), "dataframe_mb": round(est_mb, 1),
+                    "peak_process_mb": None})
     del df
-    return result
+    return results
 
 
 def _full_load_worker(raw_dir: str, queue: mp.Queue) -> None:
@@ -78,9 +94,11 @@ def _full_load_worker(raw_dir: str, queue: mp.Queue) -> None:
 def load_full(max_system_mem_pct: float) -> dict:
     """Try to load the entire raw dataset into one Pandas DataFrame, under a memory guard."""
     on_disk_gb = dir_size_bytes(config.RAW_DIR) / 1024 ** 3
-    total_ram_gb = psutil.virtual_memory().total / 1024 ** 3
+    mem = psutil.virtual_memory()
     logger.info(f"[full] Dataset on disk: {on_disk_gb:.2f} GB (compressed) | "
-                f"machine RAM: {total_ram_gb:.1f} GB | guard at {max_system_mem_pct}% system memory")
+                f"machine RAM: {mem.total / 1024 ** 3:.1f} GB, "
+                f"{mem.available / 1024 ** 3:.1f} GB available | "
+                f"guard at {max_system_mem_pct}% system memory")
     logger.info("[full] Attempting pd.read_parquet on the full dataset...")
 
     queue: mp.Queue = mp.Queue()
@@ -156,7 +174,7 @@ def main() -> None:
         logger.error(f"No Parquet files in {config.RAW_DIR}. Run generate_data.py first.")
         return
 
-    results = [load_sample(args.sample_rows)]
+    results = load_sample(args.sample_rows)
     if not args.skip_full:
         results.append(load_full(args.max_system_mem_pct))
     save_results(results)
