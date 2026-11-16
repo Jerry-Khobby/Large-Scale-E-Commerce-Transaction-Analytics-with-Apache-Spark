@@ -222,13 +222,14 @@ def main() -> None:
     args = parse_args()
     ensure_dirs()
 
-    if any(config.RAW_DIR.iterdir()):
+    existing = [p for p in config.RAW_DIR.iterdir() if not p.name.startswith(".")]
+    if existing:
         if not args.overwrite:
             logger.error(f"{config.RAW_DIR} is not empty. Re-run with --overwrite to replace it.")
             sys.exit(1)
         logger.info(f"Removing existing data in {config.RAW_DIR}")
-        shutil.rmtree(config.RAW_DIR)
-        config.RAW_DIR.mkdir(parents=True)
+        for path in existing:  # keeps .gitkeep
+            shutil.rmtree(path) if path.is_dir() else path.unlink()
 
     fake = Faker()
     Faker.seed(args.seed)
