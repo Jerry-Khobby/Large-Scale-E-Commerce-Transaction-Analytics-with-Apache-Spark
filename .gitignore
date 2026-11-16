@@ -1,7 +1,9 @@
 # =====================
-# Data (Generated)
+# Data (generated) - keep folder structure only
 # =====================
-data/
+data/**
+!data/**/
+!data/**/.gitkeep
 
 # =====================
 # Python
@@ -10,11 +12,21 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.ipynb_checkpoints/
 
 # =====================
 # Virtual Environment
 # =====================
 venv/
+.venv/
+
+# =====================
+# Spark artefacts
+# =====================
+spark-warehouse/
+metastore_db/
+derby.log
+*.crc
 
 # =====================
 # Environment Variables
