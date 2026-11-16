@@ -94,27 +94,47 @@ duplicate transactions, 0.5 % negative price/quantity, 2 % wrong `total_amount`.
 
 ## Results
 
-_Fill in after running the pipeline._
+Full run on a 16 GB / 8-core Windows laptop; Spark ran in Docker (8 GB VM).
+Details and discussion are in [PROJECT_REPORT.md](PROJECT_REPORT.md).
 
 | Metric | Value |
 |--------|-------|
-| Records generated | |
-| Raw size on disk | |
-| Generation time | |
-| Rows after cleaning | |
-| Data-quality score | |
+| Records generated | 25,000,000 |
+| Raw size on disk | 2.78 GB (1,800 Snappy Parquet files, 36 monthly partitions) |
+| Generation time / peak memory | 20.4 min / 600 MB |
+| Data-quality score (raw) | 88.36 % of rows free of any issue |
+| Rows after cleaning | 24,502,089 (497,911 removed, 1.99 %) |
+| Successful revenue 2022-2024 | $14.40 B |
 
 ### Pandas vs Spark
 
-| Test | Rows | Load time | Memory | Result |
-|------|------|-----------|--------|--------|
-| Pandas - 1M sample | | | | |
-| Pandas - full dataset | | | | |
-| Spark - full dataset | | | | |
+| Test | Rows | Time | Memory | Result |
+|------|------|------|--------|--------|
+| Pandas - 1M-row sample | 1,000,000 | 4.6 s | 689 MB DataFrame | Success |
+| Pandas - full dataset (projected from sample) | 25,000,000 | ~115 s | **~16.8 GB** | Exceeds the machine's 15.8 GB RAM |
+| Pandas - full dataset (attempted) | - | aborted at 26 s | 90 % of system RAM | Memory guard killed the load |
+| Spark - full dataset (load, explore, count) | 25,000,000 | 197 s | ~3.5 GB container | Success; full pipeline completed |
+
+![Pandas memory trace](outputs/visualizations/07_pandas_memory_trace.png)
 
 ### Performance optimisation
 
-See `outputs/reports/performance_results.csv`.
+| Experiment | Seconds |
+|------------|---------|
+| Baseline workload (no cache, sort-merge join, AQE off) | 41.8 |
+| Optimised workload (cache + broadcast join + AQE + column pruning) | 27.6 (**-33.9 %**) |
+| One-off cache materialisation | 34.1 |
+| Window/join query on `local[1]` | 11.1 |
+| Same query on `local[4]` | 6.7 (**1.65x faster**) |
+
+Execution plans: [explain_baseline.txt](outputs/reports/explain_baseline.txt) (SortMergeJoin)
+vs [explain_optimized.txt](outputs/reports/explain_optimized.txt) (BroadcastHashJoin over InMemoryTableScan).
+
+### Outputs
+
+- `outputs/query_results/` - 21 analytics results as CSV
+- `outputs/visualizations/` - 7 charts
+- `outputs/reports/` - quality report, cleaning summary, timings, Pandas results, execution plans
 
 ## Technologies
 
