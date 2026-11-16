@@ -1,0 +1,127 @@
+== Physical Plan ==
+Window (21)
++- * Sort (20)
+   +- * Project (19)
+      +- * SortMergeJoin Inner (18)
+         :- * Sort (10)
+         :  +- Exchange (9)
+         :     +- * Filter (8)
+         :        +- * HashAggregate (7)
+         :           +- Exchange (6)
+         :              +- * HashAggregate (5)
+         :                 +- * Project (4)
+         :                    +- * Filter (3)
+         :                       +- * ColumnarToRow (2)
+         :                          +- Scan parquet  (1)
+         +- * Sort (17)
+            +- * Filter (16)
+               +- * HashAggregate (15)
+                  +- Exchange (14)
+                     +- * HashAggregate (13)
+                        +- * HashAggregate (12)
+                           +- ReusedExchange (11)
+
+
+(1) Scan parquet 
+Output [6]: [product_category#6, product_name#7, total_amount#10, status#12, year#21, month#22]
+Batched: true
+Location: InMemoryFileIndex [file:/app/data/cleaned]
+PushedFilters: [IsNotNull(status), EqualTo(status,SUCCESS), IsNotNull(product_category)]
+ReadSchema: struct<product_category:string,product_name:string,total_amount:double,status:string>
+
+(2) ColumnarToRow [codegen id : 1]
+Input [6]: [product_category#6, product_name#7, total_amount#10, status#12, year#21, month#22]
+
+(3) Filter [codegen id : 1]
+Input [6]: [product_category#6, product_name#7, total_amount#10, status#12, year#21, month#22]
+Condition : ((isnotnull(status#12) AND (status#12 = SUCCESS)) AND isnotnull(product_category#6))
+
+(4) Project [codegen id : 1]
+Output [3]: [product_category#6, product_name#7, total_amount#10]
+Input [6]: [product_category#6, product_name#7, total_amount#10, status#12, year#21, month#22]
+
+(5) HashAggregate [codegen id : 1]
+Input [3]: [product_category#6, product_name#7, total_amount#10]
+Keys [2]: [product_category#6, product_name#7]
+Functions [1]: [partial_sum(total_amount#10)]
+Aggregate Attributes [1]: [sum#88]
+Results [3]: [product_category#6, product_name#7, sum#89]
+
+(6) Exchange
+Input [3]: [product_category#6, product_name#7, sum#89]
+Arguments: hashpartitioning(product_category#6, product_name#7, 200), ENSURE_REQUIREMENTS, [plan_id=106]
+
+(7) HashAggregate [codegen id : 2]
+Input [3]: [product_category#6, product_name#7, sum#89]
+Keys [2]: [product_category#6, product_name#7]
+Functions [1]: [sum(total_amount#10)]
+Aggregate Attributes [1]: [sum(total_amount#10)#48]
+Results [3]: [product_category#6, product_name#7, sum(total_amount#10)#48 AS revenue#24]
+
+(8) Filter [codegen id : 2]
+Input [3]: [product_category#6, product_name#7, revenue#24]
+Condition : isnotnull(revenue#24)
+
+(9) Exchange
+Input [3]: [product_category#6, product_name#7, revenue#24]
+Arguments: hashpartitioning(product_category#6, 200), ENSURE_REQUIREMENTS, [plan_id=111]
+
+(10) Sort [codegen id : 3]
+Input [3]: [product_category#6, product_name#7, revenue#24]
+Arguments: [product_category#6 ASC NULLS FIRST], false, 0
+
+(11) ReusedExchange [Reuses operator id: 6]
+Output [3]: [product_category#60, product_name#61, sum#95]
+
+(12) HashAggregate [codegen id : 5]
+Input [3]: [product_category#60, product_name#61, sum#95]
+Keys [2]: [product_category#60, product_name#61]
+Functions [1]: [sum(total_amount#64)]
+Aggregate Attributes [1]: [sum(total_amount#64)#48]
+Results [2]: [product_category#60, sum(total_amount#64)#48 AS revenue#77]
+
+(13) HashAggregate [codegen id : 5]
+Input [2]: [product_category#60, revenue#77]
+Keys [1]: [product_category#60]
+Functions [1]: [partial_avg(revenue#77)]
+Aggregate Attributes [2]: [sum#90, count#91L]
+Results [3]: [product_category#60, sum#92, count#93L]
+
+(14) Exchange
+Input [3]: [product_category#60, sum#92, count#93L]
+Arguments: hashpartitioning(product_category#60, 200), ENSURE_REQUIREMENTS, [plan_id=176]
+
+(15) HashAggregate [codegen id : 6]
+Input [3]: [product_category#60, sum#92, count#93L]
+Keys [1]: [product_category#60]
+Functions [1]: [avg(revenue#77)]
+Aggregate Attributes [1]: [avg(revenue#77)#53]
+Results [2]: [product_category#60, avg(revenue#77)#53 AS cat_avg#49]
+
+(16) Filter [codegen id : 6]
+Input [2]: [product_category#60, cat_avg#49]
+Condition : isnotnull(cat_avg#49)
+
+(17) Sort [codegen id : 6]
+Input [2]: [product_category#60, cat_avg#49]
+Arguments: [product_category#60 ASC NULLS FIRST], false, 0
+
+(18) SortMergeJoin [codegen id : 7]
+Left keys [1]: [product_category#6]
+Right keys [1]: [product_category#60]
+Join type: Inner
+Join condition: (revenue#24 > cat_avg#49)
+
+(19) Project [codegen id : 7]
+Output [4]: [product_category#6, product_name#7, revenue#24, cat_avg#49]
+Input [5]: [product_category#6, product_name#7, revenue#24, product_category#60, cat_avg#49]
+
+(20) Sort [codegen id : 7]
+Input [4]: [product_category#6, product_name#7, revenue#24, cat_avg#49]
+Arguments: [product_category#6 ASC NULLS FIRST, revenue#24 DESC NULLS LAST], false, 0
+
+(21) Window
+Input [4]: [product_category#6, product_name#7, revenue#24, cat_avg#49]
+Arguments: [dense_rank(revenue#24) windowspecdefinition(product_category#6, revenue#24 DESC NULLS LAST, specifiedwindowframe(RowFrame, unboundedpreceding$(), currentrow$())) AS rank#79], [product_category#6], [revenue#24 DESC NULLS LAST]
+
+

@@ -1,0 +1,171 @@
+== Physical Plan ==
+AdaptiveSparkPlan (29)
++- Window (28)
+   +- Sort (27)
+      +- Exchange (26)
+         +- Project (25)
+            +- BroadcastHashJoin Inner BuildRight (24)
+               :- Filter (11)
+               :  +- HashAggregate (10)
+               :     +- Exchange (9)
+               :        +- HashAggregate (8)
+               :           +- Project (7)
+               :              +- Filter (6)
+               :                 +- InMemoryTableScan (1)
+               :                       +- InMemoryRelation (2)
+               :                             +- * Project (5)
+               :                                +- * ColumnarToRow (4)
+               :                                   +- Scan parquet  (3)
+               +- BroadcastExchange (23)
+                  +- Filter (22)
+                     +- HashAggregate (21)
+                        +- Exchange (20)
+                           +- HashAggregate (19)
+                              +- HashAggregate (18)
+                                 +- Exchange (17)
+                                    +- HashAggregate (16)
+                                       +- Project (15)
+                                          +- Filter (14)
+                                             +- InMemoryTableScan (12)
+                                                   +- InMemoryRelation (13)
+                                                         +- * Project (5)
+                                                            +- * ColumnarToRow (4)
+                                                               +- Scan parquet  (3)
+
+
+(1) InMemoryTableScan
+Output [4]: [product_category#268, product_name#269, status#274, total_amount#272]
+Arguments: [product_category#268, product_name#269, status#274, total_amount#272], [isnotnull(status#274), (status#274 = SUCCESS), isnotnull(product_category#268)]
+
+(2) InMemoryRelation
+Arguments: [product_category#268, product_name#269, country#266, status#274, total_amount#272, transaction_timestamp#275], StorageLevel(disk, memory, deserialized, 1 replicas)
+
+(3) Scan parquet 
+Output [8]: [country#266, product_category#268, product_name#269, total_amount#272, status#274, transaction_timestamp#275, year#283, month#284]
+Batched: true
+Location: InMemoryFileIndex [file:/app/data/cleaned]
+ReadSchema: struct<country:string,product_category:string,product_name:string,total_amount:double,status:string,transaction_timestamp:timestamp_ntz>
+
+(4) ColumnarToRow [codegen id : 1]
+Input [8]: [country#266, product_category#268, product_name#269, total_amount#272, status#274, transaction_timestamp#275, year#283, month#284]
+
+(5) Project [codegen id : 1]
+Output [6]: [product_category#268, product_name#269, country#266, status#274, total_amount#272, transaction_timestamp#275]
+Input [8]: [country#266, product_category#268, product_name#269, total_amount#272, status#274, transaction_timestamp#275, year#283, month#284]
+
+(6) Filter
+Input [4]: [product_category#268, product_name#269, status#274, total_amount#272]
+Condition : ((isnotnull(status#274) AND (status#274 = SUCCESS)) AND isnotnull(product_category#268))
+
+(7) Project
+Output [3]: [product_category#268, product_name#269, total_amount#272]
+Input [4]: [product_category#268, product_name#269, status#274, total_amount#272]
+
+(8) HashAggregate
+Input [3]: [product_category#268, product_name#269, total_amount#272]
+Keys [2]: [product_category#268, product_name#269]
+Functions [1]: [partial_sum(total_amount#272)]
+Aggregate Attributes [1]: [sum#709]
+Results [3]: [product_category#268, product_name#269, sum#710]
+
+(9) Exchange
+Input [3]: [product_category#268, product_name#269, sum#710]
+Arguments: hashpartitioning(product_category#268, product_name#269, 16), ENSURE_REQUIREMENTS, [plan_id=818]
+
+(10) HashAggregate
+Input [3]: [product_category#268, product_name#269, sum#710]
+Keys [2]: [product_category#268, product_name#269]
+Functions [1]: [sum(total_amount#272)]
+Aggregate Attributes [1]: [sum(total_amount#272)#483]
+Results [3]: [product_category#268, product_name#269, sum(total_amount#272)#483 AS revenue#476]
+
+(11) Filter
+Input [3]: [product_category#268, product_name#269, revenue#476]
+Condition : isnotnull(revenue#476)
+
+(12) InMemoryTableScan
+Output [4]: [product_category#495, product_name#496, status#501, total_amount#499]
+Arguments: [product_category#495, product_name#496, status#501, total_amount#499], [isnotnull(status#501), (status#501 = SUCCESS), isnotnull(product_category#495)]
+
+(13) InMemoryRelation
+Arguments: [product_category#495, product_name#496, country#493, status#501, total_amount#499, transaction_timestamp#502], StorageLevel(disk, memory, deserialized, 1 replicas)
+
+(14) Filter
+Input [4]: [product_category#495, product_name#496, status#501, total_amount#499]
+Condition : ((isnotnull(status#501) AND (status#501 = SUCCESS)) AND isnotnull(product_category#495))
+
+(15) Project
+Output [3]: [product_category#495, product_name#496, total_amount#499]
+Input [4]: [product_category#495, product_name#496, status#501, total_amount#499]
+
+(16) HashAggregate
+Input [3]: [product_category#495, product_name#496, total_amount#499]
+Keys [2]: [product_category#495, product_name#496]
+Functions [1]: [partial_sum(total_amount#499)]
+Aggregate Attributes [1]: [sum#715]
+Results [3]: [product_category#495, product_name#496, sum#716]
+
+(17) Exchange
+Input [3]: [product_category#495, product_name#496, sum#716]
+Arguments: hashpartitioning(product_category#495, product_name#496, 16), ENSURE_REQUIREMENTS, [plan_id=821]
+
+(18) HashAggregate
+Input [3]: [product_category#495, product_name#496, sum#716]
+Keys [2]: [product_category#495, product_name#496]
+Functions [1]: [sum(total_amount#499)]
+Aggregate Attributes [1]: [sum(total_amount#499)#483]
+Results [2]: [product_category#495, sum(total_amount#499)#483 AS revenue#512]
+
+(19) HashAggregate
+Input [2]: [product_category#495, revenue#512]
+Keys [1]: [product_category#495]
+Functions [1]: [partial_avg(revenue#512)]
+Aggregate Attributes [2]: [sum#711, count#712L]
+Results [3]: [product_category#495, sum#713, count#714L]
+
+(20) Exchange
+Input [3]: [product_category#495, sum#713, count#714L]
+Arguments: hashpartitioning(product_category#495, 16), ENSURE_REQUIREMENTS, [plan_id=825]
+
+(21) HashAggregate
+Input [3]: [product_category#495, sum#713, count#714L]
+Keys [1]: [product_category#495]
+Functions [1]: [avg(revenue#512)]
+Aggregate Attributes [1]: [avg(revenue#512)#488]
+Results [2]: [product_category#495, avg(revenue#512)#488 AS cat_avg#484]
+
+(22) Filter
+Input [2]: [product_category#495, cat_avg#484]
+Condition : isnotnull(cat_avg#484)
+
+(23) BroadcastExchange
+Input [2]: [product_category#495, cat_avg#484]
+Arguments: HashedRelationBroadcastMode(List(input[0, string, true]),false), [plan_id=829]
+
+(24) BroadcastHashJoin
+Left keys [1]: [product_category#268]
+Right keys [1]: [product_category#495]
+Join type: Inner
+Join condition: (revenue#476 > cat_avg#484)
+
+(25) Project
+Output [4]: [product_category#268, product_name#269, revenue#476, cat_avg#484]
+Input [5]: [product_category#268, product_name#269, revenue#476, product_category#495, cat_avg#484]
+
+(26) Exchange
+Input [4]: [product_category#268, product_name#269, revenue#476, cat_avg#484]
+Arguments: hashpartitioning(product_category#268, 16), ENSURE_REQUIREMENTS, [plan_id=833]
+
+(27) Sort
+Input [4]: [product_category#268, product_name#269, revenue#476, cat_avg#484]
+Arguments: [product_category#268 ASC NULLS FIRST, revenue#476 DESC NULLS LAST], false, 0
+
+(28) Window
+Input [4]: [product_category#268, product_name#269, revenue#476, cat_avg#484]
+Arguments: [dense_rank(revenue#476) windowspecdefinition(product_category#268, revenue#476 DESC NULLS LAST, specifiedwindowframe(RowFrame, unboundedpreceding$(), currentrow$())) AS rank#514], [product_category#268], [revenue#476 DESC NULLS LAST]
+
+(29) AdaptiveSparkPlan
+Output [5]: [product_category#268, product_name#269, revenue#476, cat_avg#484, rank#514]
+Arguments: isFinalPlan=false
+
+

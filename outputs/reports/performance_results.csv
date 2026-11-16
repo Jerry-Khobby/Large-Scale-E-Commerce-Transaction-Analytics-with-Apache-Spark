@@ -1,0 +1,7 @@
+experiment,seconds
+"baseline (no cache, no broadcast, AQE off)",41.8
+cache materialisation (one-off),34.06
+optimized (cache + broadcast + AQE + pruning),27.64
+improvement_pct,33.9
+parallelism local[1],11.08
+parallelism local[4],6.7

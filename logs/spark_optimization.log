@@ -1,0 +1,9 @@
+2026-11-16 14:12:36,345 | INFO | Execution plan saved to /app/outputs/reports/explain_baseline.txt
+2026-11-16 14:13:18,146 | INFO | Baseline workload: 41.80s
+2026-11-16 14:13:54,888 | INFO | Cache materialised in 34.06s
+2026-11-16 14:13:55,174 | INFO | Execution plan saved to /app/outputs/reports/explain_optimized.txt
+2026-11-16 14:14:22,811 | INFO | Optimised workload: 27.64s (+34.06s one-off caching)
+2026-11-16 14:14:22,825 | INFO | Improvement: 33.9%
+2026-11-16 14:14:37,044 | INFO | local[1]: 11.08s
+2026-11-16 14:14:46,429 | INFO | local[4]: 6.70s
+2026-11-16 14:14:46,828 | INFO | Performance results written to /app/outputs/reports/performance_results.csv
