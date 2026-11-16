@@ -1,0 +1,102 @@
+# Large-Scale E-Commerce Transaction Analytics with Apache Spark
+
+Generates a synthetic e-commerce dataset (10M+ transactions, multiple GB of Parquet)
+with Faker, shows why Pandas struggles with it, then cleans, analyses and optimises
+it with PySpark. See [specification.md](specification.md) for the full brief.
+
+## Project structure
+
+```
+.
+├── data/                      # generated, git-ignored (folders kept with .gitkeep)
+│   ├── raw/                   # Stage 1 output - Parquet partitioned by year_month
+│   ├── cleaned/               # Stage 5 output - Parquet partitioned by year/month
+│   └── analytics/             # Stage 6 output - one CSV folder per query
+├── src/
+│   ├── config.py              # paths, dataset distributions, Spark settings
+│   ├── utils.py               # logger, SparkSession builder, timer, CSV export
+│   ├── generate_data.py       # Stage 1   - data generation
+│   ├── pandas_test.py         # Stage 2   - Pandas limitation demo
+│   ├── spark_cleaning.py      # Stage 3-5 - load, quality report, cleaning
+│   ├── spark_analytics.py     # Stage 6   - 5 query groups + Spark SQL
+│   ├── spark_optimization.py  # Stage 7   - caching / broadcast / parallelism
+│   └── visualizations.py      # Stage 8   - charts
+├── notebooks/                 # exploratory notebooks (scripts are the source of truth)
+├── outputs/
+│   ├── visualizations/        # PNG charts
+│   └── reports/               # quality report, timings, explain plans, screenshots
+├── logs/                      # one log file per script
+├── PROJECT_REPORT.md
+├── requirements.txt
+└── specification.md
+```
+
+## Setup
+
+Requirements: Python 3.10+, **Java 17 or 21** (needed by PySpark 4.x), ~15 GB free disk.
+
+```bash
+python -m venv venv
+venv\Scripts\activate          # Windows  (macOS/Linux: source venv/bin/activate)
+pip install -r requirements.txt
+```
+
+**Windows only:** Spark needs `winutils.exe` and `hadoop.dll` to write files.
+Download them for Hadoop 3.x, put them in e.g. `C:\hadoop\bin`, then set
+`HADOOP_HOME=C:\hadoop` and add `%HADOOP_HOME%\bin` to `PATH`.
+
+## How to run
+
+All scripts use paths relative to the project root, so you can run them from anywhere.
+Run them in order:
+
+| Step | Command | Output |
+|------|---------|--------|
+| 1. Generate data | `python src/generate_data.py --records 20000000` | `data/raw/`, `logs/data_generation.log` |
+| 2. Pandas test | `python src/pandas_test.py` | `outputs/reports/pandas_test_results.csv` |
+| 3-5. Clean | `python src/spark_cleaning.py` | `data/cleaned/`, `outputs/reports/data_quality_report.csv`, `cleaning_summary.csv` |
+| 6. Analytics | `python src/spark_analytics.py` | `data/analytics/*`, `outputs/reports/analytics_timings.csv` |
+| 7. Optimisation | `python src/spark_optimization.py` | `outputs/reports/performance_results.csv`, `explain_*.txt` |
+| 8. Charts | `python src/visualizations.py` | `outputs/visualizations/*.png` |
+
+Useful flags:
+- `generate_data.py --records N --batch-size N --seed N --overwrite`
+- `pandas_test.py --sample-rows N --skip-full`
+- `spark_optimization.py --skip-parallelism`
+
+Tip: do a quick end-to-end smoke test with `--records 200000` before generating the full dataset.
+
+## Dataset
+
+14 columns per spec section 3.1. Transactions are spread over 2022-01-01 to 2024-12-31,
+8 product categories, 4 payment methods (40/30/20/10 %) and an 85/15 SUCCESS/FAILED
+split. Intentional quality issues: ~4 % missing city and ~4 % missing email, ~1.5 %
+duplicate transactions, 0.5 % negative price/quantity, 2 % wrong `total_amount`.
+
+## Results
+
+_Fill in after running the pipeline._
+
+| Metric | Value |
+|--------|-------|
+| Records generated | |
+| Raw size on disk | |
+| Generation time | |
+| Rows after cleaning | |
+| Data-quality score | |
+
+### Pandas vs Spark
+
+| Test | Rows | Load time | Memory | Result |
+|------|------|-----------|--------|--------|
+| Pandas - 1M sample | | | | |
+| Pandas - full dataset | | | | |
+| Spark - full dataset | | | | |
+
+### Performance optimisation
+
+See `outputs/reports/performance_results.csv`.
+
+## Technologies
+
+Python, PySpark 4.1, Faker, PyArrow/Parquet, Pandas, Matplotlib.
