@@ -73,7 +73,7 @@ Run them in order:
 |------|---------|--------|
 | 1. Generate data | `python src/generate_data.py --records 20000000` | `data/raw/`, `logs/data_generation.log` |
 | 2. Pandas test | `python src/pandas_test.py` | `outputs/reports/pandas_test_results.csv` |
-| 3-5. Clean | `python src/spark_cleaning.py` | `data/cleaned/`, `outputs/reports/data_quality_report.csv`, `cleaning_summary.csv` |
+| 3-5. Clean | `python src/spark_cleaning.py` | `data/cleaned/`, `outputs/reports/exploration_output.txt`, `data_quality_report.csv`, `cleaning_summary.csv` |
 | 6. Analytics | `python src/spark_analytics.py` | `data/analytics/*`, `outputs/reports/analytics_timings.csv` |
 | 7. Optimisation | `python src/spark_optimization.py` | `outputs/reports/performance_results.csv`, `explain_*.txt` |
 | 8. Charts | `python src/visualizations.py` | `outputs/visualizations/*.png` |
@@ -134,7 +134,7 @@ vs [explain_optimized.txt](outputs/reports/explain_optimized.txt) (BroadcastHash
 
 - `outputs/query_results/` - 21 analytics results as CSV
 - `outputs/visualizations/` - 7 charts
-- `outputs/reports/` - quality report, cleaning summary, timings, Pandas results, execution plans
+- `outputs/reports/` - Stage 3 schema and statistics (`exploration_output.txt`), quality report, cleaning summary, timings, Pandas results, execution plans
 
 ## Technologies
 

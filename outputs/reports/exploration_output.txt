@@ -1,0 +1,55 @@
+root
+ |-- transaction_id: string (nullable = true)
+ |-- customer_id: string (nullable = true)
+ |-- customer_name: string (nullable = true)
+ |-- email: string (nullable = true)
+ |-- country: string (nullable = true)
+ |-- city: string (nullable = true)
+ |-- product_category: string (nullable = true)
+ |-- product_name: string (nullable = true)
+ |-- price: double (nullable = true)
+ |-- quantity: integer (nullable = true)
+ |-- total_amount: double (nullable = true)
+ |-- payment_method: string (nullable = true)
+ |-- status: string (nullable = true)
+ |-- transaction_timestamp: timestamp_ntz (nullable = true)
+
++------------------------------------+------------+---------------+--------------------------------+-------+----------------+----------------+-----------------------------+------+--------+------------+--------------+-------+---------------------+
+|transaction_id                      |customer_id |customer_name  |email                           |country|city            |product_category|product_name                 |price |quantity|total_amount|payment_method|status |transaction_timestamp|
++------------------------------------+------------+---------------+--------------------------------+-------+----------------+----------------+-----------------------------+------+--------+------------+--------------+-------+---------------------+
+|29b98399-cd6e-4b0c-818c-e010ce2540c2|CUST-0125631|Sarah Shannon  |sarah.shannon125631@hotmail.com |JP     |Lake Lee        |Home & Garden   |DarkGreen Would Home         |122.34|2       |244.68      |Debit Card    |FAILED |2024-12-14 09:50:43  |
+|dac867b8-71b0-4bbe-ac48-7a03ef476a46|CUST-0197488|Kyle Newman    |kyle.newman197488@hotmail.com   |MC     |Ortizshire      |Fashion         |Silver Treatment Fashion     |62.43 |1       |62.43       |Mobile Money  |SUCCESS|2024-12-27 06:40:32  |
+|c21e53dc-2f15-4da8-b23f-f9b9136a58cd|CUST-0202081|Curtis Baker   |curtis.baker202081@yahoo.com    |SE     |New Andrea      |Home & Garden   |AliceBlue List Home          |104.84|2       |209.68      |Debit Card    |SUCCESS|2024-12-18 14:00:19  |
+|98bbbd6e-6596-496a-a86c-43a84a3b6ea3|CUST-0012213|Haley Payne    |haley.payne12213@hotmail.com    |JP     |West Joshua     |Books           |SkyBlue And Books            |71.81 |3       |215.43      |Credit Card   |SUCCESS|2024-12-11 16:33:46  |
+|315921e1-51db-4e51-a7f3-d23ef857dabf|CUST-0126034|Alicia Thomas  |alicia.thomas126034@hotmail.com |GD     |Jacksonfort     |Beauty          |Moccasin Central Beauty      |59.26 |3       |177.78      |Mobile Money  |SUCCESS|2024-12-04 19:37:13  |
+|043e569c-78a8-4785-a973-fc9407423c4b|CUST-0123206|Erica Garcia   |erica.garcia123206@gmail.com    |LA     |Jessicafort     |Toys            |DeepSkyBlue Sometimes Toys   |78.58 |2       |157.16      |Credit Card   |SUCCESS|2024-12-23 08:53:28  |
+|a198706f-5140-4bfb-86ba-583cf5ed472c|CUST-0037193|Angela Diaz    |angela.diaz37193@gmail.com      |NP     |Alvarezside     |Sports          |Fuchsia Answer Sports        |422.26|5       |2111.3      |Mobile Money  |SUCCESS|2024-12-24 22:44:14  |
+|25c7dfba-23fd-4594-a287-c426db8d38ca|CUST-0126015|Daniel Ellis   |daniel.ellis126015@gmail.com    |AF     |East Robert     |Electronics     |Chartreuse Prove Electronics |769.29|2       |1538.58     |Debit Card    |SUCCESS|2024-12-09 13:36:58  |
+|610790b3-97f7-44c7-ad3a-bd4b1c84ab6f|CUST-0002992|Mark Cunningham|mark.cunningham2992@hotmail.com |MD     |New Melissa     |Food            |LightGray Election Food      |43.32 |2       |86.64       |Debit Card    |SUCCESS|2024-12-19 14:34:18  |
+|0f751e7e-2374-4d61-b3ca-d27dfabb81f9|CUST-0123070|Amanda Thomas  |NULL                            |MY     |New Stephenville|Electronics     |SeaGreen Program Electronics |342.31|1       |342.31      |Mobile Money  |SUCCESS|2024-12-18 16:17:26  |
+|3d6d5d2d-a3a3-4929-b4c8-c3d5b471d261|CUST-0110559|Amy Walker     |amy.walker110559@yahoo.com      |PK     |North Melinda   |Home & Garden   |DarkGreen Would Home         |123.22|1       |123.22      |Debit Card    |SUCCESS|2024-12-27 23:52:21  |
+|f0e62571-d952-49be-9095-54137d09b38a|CUST-0201038|Terri Rivera   |NULL                            |NI     |Sarahhaven      |Fashion         |MediumOrchid Decision Fashion|27.84 |2       |55.68       |Debit Card    |SUCCESS|2024-12-11 18:14:52  |
+|91bf5ed0-4c34-4ed5-adf6-5154ade9b1dc|CUST-0150668|Brent Owens    |NULL                            |LA     |Sanchezmouth    |Fashion         |LightBlue Beyond Fashion     |67.85 |4       |271.4       |Debit Card    |SUCCESS|2024-12-10 15:42:25  |
+|fa0a2194-4b21-40e9-9e6e-04c923b6035e|CUST-0004383|Tracy Jennings |NULL                            |DK     |Lindabury       |Beauty          |Moccasin Seek Beauty         |17.21 |2       |34.42       |Credit Card   |SUCCESS|2024-12-24 09:07:39  |
+|be3822ec-0f94-447a-9574-a2534944a667|CUST-0173499|Thomas Powell  |thomas.powell173499@hotmail.com |LA     |East Johnberg   |Toys            |MediumVioletRed Next Toys    |122.37|2       |244.74      |Debit Card    |SUCCESS|2024-12-22 20:26:29  |
+|cc092d4d-a708-4d21-b888-3f2543cfbdde|CUST-0199973|Peter Herman   |peter.herman199973@yahoo.com    |EG     |Lindsayport     |Home & Garden   |White Catch Home             |366.08|4       |1464.32     |Debit Card    |FAILED |2024-12-12 20:16:49  |
+|017524a4-3109-4fa5-ab86-1138580ea4bd|CUST-0149462|Kristina Moore |kristina.moore149462@gmail.com  |RO     |East Kristen    |Toys            |LightPink Professor Toys     |130.32|2       |260.64      |Credit Card   |SUCCESS|2024-12-15 17:42:03  |
+|22bedc8e-7177-485e-ae3a-083d72d7295d|CUST-0025531|Richard Buckley|richard.buckley25531@hotmail.com|KI     |Port Ashleyfurt |Sports          |Moccasin Energy Sports       |134.12|1       |134.12      |Mobile Money  |SUCCESS|2024-12-14 20:03:24  |
+|5e60d881-825a-44ad-8487-c95b00576316|CUST-0217394|Ellen Kim      |ellen.kim217394@gmail.com       |SO     |Chavezshire     |Beauty          |IndianRed What Beauty        |109.78|2       |219.56      |Credit Card   |SUCCESS|2024-12-30 08:58:22  |
+|cc2c5d9a-3781-4a0c-9d4d-92dca03aab17|CUST-0085704|Marie Jackson  |marie.jackson85704@yahoo.com    |PL     |North Dustinview|Home & Garden   |LightSkyBlue Side Home       |49.59 |3       |148.77      |Credit Card   |SUCCESS|2024-12-07 12:21:13  |
++------------------------------------+------------+---------------+--------------------------------+-------+----------------+----------------+-----------------------------+------+--------+------------+--------------+-------+---------------------+
+only showing top 20 rows
+
+Total records: 25,000,000
+Number of partitions: 78
+
++-------+------------------+------------------+------------------+
+|summary|             price|          quantity|      total_amount|
++-------+------------------+------------------+------------------+
+|  count|          25000000|          25000000|          25000000|
+|   mean|229.29020388319918|        2.98564056| 688.6951263860011|
+| stddev|284.95514354258853|1.4453703366427235|1009.0528383424779|
+|    min|          -1564.64|                -5|          -9374.63|
+|    max|           1564.66|                 5|          11342.95|
++-------+------------------+------------------+------------------+
+

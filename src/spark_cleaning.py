@@ -16,6 +16,8 @@ Usage:
 from __future__ import annotations
 
 import csv
+import io
+from contextlib import redirect_stdout
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
@@ -51,16 +53,27 @@ def load_raw(spark: SparkSession) -> DataFrame:
 
 
 def explore(df: DataFrame) -> int:
-    """Print schema, a sample, partition count and summary stats. Returns row count."""
-    df.printSchema()
-    df.show(20, truncate=False)
+    """
+    Print schema, a sample, partition count and summary stats, and save the
+    same output to ``outputs/reports/exploration_output.txt``. Returns the
+    row count.
+    """
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        df.printSchema()
+        df.show(20, truncate=False)
+        total = df.count()
+        print(f"Total records: {total:,}")
+        print(f"Number of partitions: {df.rdd.getNumPartitions()}")
+        print()
+        df.describe("price", "quantity", "total_amount").show()
 
-    total = df.count()
+    output = buffer.getvalue()
+    print(output)
+    out_file = config.REPORTS_DIR / "exploration_output.txt"
+    out_file.write_text(output, encoding="utf-8")
     logger.info(f"Total records: {total:,}")
-    logger.info(f"Number of partitions: {df.rdd.getNumPartitions()}")
-    logger.info("Column types: " + ", ".join(f"{c}={t}" for c, t in df.dtypes))
-
-    df.describe("price", "quantity", "total_amount").show()
+    logger.info(f"Exploration output written to {out_file}")
     return total
 
 
