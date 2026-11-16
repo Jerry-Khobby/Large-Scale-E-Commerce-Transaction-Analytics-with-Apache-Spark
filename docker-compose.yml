@@ -1,0 +1,10 @@
+# Usage:  docker compose run --rm spark python src/<script>.py [args]
+services:
+  spark:
+    build: .
+    image: ecommerce-spark-analytics:latest
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "4040:4040"   # Spark UI while a job is running
