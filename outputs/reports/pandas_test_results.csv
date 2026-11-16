@@ -1,0 +1,4 @@
+test,rows,status,load_seconds,dataframe_mb,peak_process_mb
+pandas_sample_1000000,1000000,SUCCESS,4.61,688.6,705.6
+pandas_full_dataset_estimate,25000000,EXCEEDS_RAM,115.37,17213.9,
+pandas_full_dataset,,ABORTED_AT_90PCT_RAM,26.09,,2608.5

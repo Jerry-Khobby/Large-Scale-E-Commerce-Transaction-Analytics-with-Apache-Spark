@@ -1,4 +1,8 @@
-2025-12-26 15:45:36,934 | INFO | Data loaded successfully in 9.57 seconds
-2025-12-26 15:45:36,934 | INFO | Data loaded successfully in 9.57 seconds
-2025-12-26 15:45:41,496 | INFO | DataFrame size: 1049.79 MB
-2025-12-26 15:45:41,496 | INFO | DataFrame size: 1049.79 MB
+2026-11-16 13:19:45,416 | INFO | [sample] Loading 1,000,000 rows with Pandas
+2026-11-16 13:19:57,737 | INFO | [sample] Loaded 1,000,000 rows in 4.61s | DataFrame 689 MB | process +625 MB
+2026-11-16 13:21:02,102 | INFO | [estimate] Full dataset: 25,000,000 rows -> ~16.8 GB as a Pandas DataFrame (106% of total machine RAM), ~115s to load
+2026-11-16 13:21:02,839 | INFO | [full] Dataset on disk: 2.78 GB (compressed) | machine RAM: 15.8 GB, 3.0 GB available | guard at 90.0% system memory
+2026-11-16 13:21:02,840 | INFO | [full] Attempting pd.read_parquet on the full dataset...
+2026-11-16 13:21:28,944 | ERROR | [full] ABORTED after 26.1s: system memory at 90.0% (Pandas process 2,608 MB) - dataset does not fit in RAM
+2026-11-16 13:21:29,466 | INFO | [full] Result: ABORTED_AT_90PCT_RAM | 26.1s | peak Pandas process memory 2,608 MB
+2026-11-16 13:21:29,581 | INFO | Results saved to E:\jerry\Downloads\Large-Scale-E-Commerce-Transaction-Analytics-with-Apache-Spark\outputs\reports\pandas_test_results.csv
