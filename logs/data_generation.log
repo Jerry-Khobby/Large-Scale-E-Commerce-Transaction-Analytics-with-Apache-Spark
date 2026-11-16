@@ -1,25 +1,59 @@
-2025-12-26 14:36:58,962 | INFO | Data generation started
-2025-12-26 14:36:58,962 | INFO | Target records: 1,000,000
-2025-12-26 14:36:58,962 | INFO | Batch size: 100,000
-2025-12-26 14:37:44,154 | INFO | Batch written | Total records: 100,000 | Memory usage: 215.33 MB | File: ../data/raw\year_month=2025-05\transactions_ff1aecb303bd41f1a8f7296dd142b3b5.parquet
-2025-12-26 14:38:27,894 | INFO | Batch written | Total records: 200,000 | Memory usage: 230.81 MB | File: ../data/raw\year_month=2024-03\transactions_006240cc6d3d4c19b7242067e65ba264.parquet
-2025-12-26 14:39:12,044 | INFO | Batch written | Total records: 300,000 | Memory usage: 232.90 MB | File: ../data/raw\year_month=2025-10\transactions_a87b3f4a5ecf40f1829f3f0343ec8450.parquet
-2025-12-26 14:39:56,424 | INFO | Batch written | Total records: 400,000 | Memory usage: 233.00 MB | File: ../data/raw\year_month=2024-06\transactions_35f35ff21580407e974ce0af29144a70.parquet
-2025-12-26 14:40:40,780 | INFO | Batch written | Total records: 500,000 | Memory usage: 232.92 MB | File: ../data/raw\year_month=2025-04\transactions_90d90b0c1296435d9dd6d445cb045bce.parquet
-2025-12-26 14:42:57,284 | INFO | Data generation started
-2025-12-26 14:42:57,285 | INFO | Target records: 1,000,000
-2025-12-26 14:42:57,285 | INFO | Batch size: 100,000
-2025-12-26 14:43:41,651 | INFO | Batch written | Total records: 100,000 | Memory usage: 211.38 MB | File: ../data/raw\year_month=2025-05\transactions_cf968095d1254435aec261e348c1fbd6.parquet
-2025-12-26 14:44:25,773 | INFO | Batch written | Total records: 200,000 | Memory usage: 230.71 MB | File: ../data/raw\year_month=2024-03\transactions_ac1597b660e9464e8ce7c86ead163d83.parquet
-2025-12-26 14:45:10,211 | INFO | Batch written | Total records: 300,000 | Memory usage: 227.95 MB | File: ../data/raw\year_month=2025-10\transactions_3e747e96765c4409910c70fb10e890f5.parquet
-2025-12-26 14:45:55,448 | INFO | Batch written | Total records: 400,000 | Memory usage: 230.83 MB | File: ../data/raw\year_month=2024-06\transactions_6641748d02ec4ae09c1031743f1e0789.parquet
-2025-12-26 14:46:40,403 | INFO | Batch written | Total records: 500,000 | Memory usage: 231.03 MB | File: ../data/raw\year_month=2025-04\transactions_cd0a4798e14047db8375b3c86d0d40b2.parquet
-2025-12-26 14:47:24,824 | INFO | Batch written | Total records: 600,000 | Memory usage: 231.88 MB | File: ../data/raw\year_month=2024-03\transactions_658caf20eca341428a103cfb9f73f23c.parquet
-2025-12-26 14:48:09,099 | INFO | Batch written | Total records: 700,000 | Memory usage: 230.11 MB | File: ../data/raw\year_month=2025-08\transactions_c672e721dd7842d3a5121b9712f1d299.parquet
-2025-12-26 14:48:55,382 | INFO | Batch written | Total records: 800,000 | Memory usage: 234.21 MB | File: ../data/raw\year_month=2024-05\transactions_e38116a733b64d478d9fb70f495801ea.parquet
-2025-12-26 14:50:04,848 | INFO | Batch written | Total records: 900,000 | Memory usage: 234.16 MB | File: ../data/raw\year_month=2024-10\transactions_43f47d3e80114510a35b8709bef90010.parquet
-2025-12-26 14:50:49,422 | INFO | Batch written | Total records: 1,000,000 | Memory usage: 234.07 MB | File: ../data/raw\year_month=2024-02\transactions_b51f6958b9dd4c9cbb09bc848d3eba23.parquet
-2025-12-26 14:50:49,423 | INFO |  Data generation completed successfully
-2025-12-26 14:50:49,423 | INFO | Total records generated: 1,000,000
-2025-12-26 14:50:49,423 | INFO | Total time taken: 472.14 seconds
-2025-12-26 14:50:49,423 | INFO | Final memory usage: 234.07 MB
+2026-11-16 12:57:15,988 | INFO | Data generation started
+2026-11-16 12:57:16,031 | INFO | Target records: 25,000,000 | Batch size: 500,000
+2026-11-16 12:57:16,031 | INFO | Building customer pool of 250,000 customers
+2026-11-16 12:57:20,402 | INFO | Built product catalogue of 480 products
+2026-11-16 12:57:52,051 | INFO | Batch 1 written | 500,000/25,000,000 records | 13,881 rec/s | memory 413 MB
+2026-11-16 12:58:20,719 | INFO | Batch 2 written | 1,000,000/25,000,000 records | 15,459 rec/s | memory 475 MB
+2026-11-16 12:58:49,915 | INFO | Batch 3 written | 1,500,000/25,000,000 records | 15,977 rec/s | memory 461 MB
+2026-11-16 12:59:17,141 | INFO | Batch 4 written | 2,000,000/25,000,000 records | 16,514 rec/s | memory 456 MB
+2026-11-16 12:59:43,494 | INFO | Batch 5 written | 2,500,000/25,000,000 records | 16,953 rec/s | memory 468 MB
+2026-11-16 13:00:12,992 | INFO | Batch 6 written | 3,000,000/25,000,000 records | 16,953 rec/s | memory 464 MB
+2026-11-16 13:00:40,744 | INFO | Batch 7 written | 3,500,000/25,000,000 records | 17,097 rec/s | memory 463 MB
+2026-11-16 13:01:05,770 | INFO | Batch 8 written | 4,000,000/25,000,000 records | 17,411 rec/s | memory 467 MB
+2026-11-16 13:01:28,882 | INFO | Batch 9 written | 4,500,000/25,000,000 records | 17,797 rec/s | memory 470 MB
+2026-11-16 13:01:59,833 | INFO | Batch 10 written | 5,000,000/25,000,000 records | 17,618 rec/s | memory 499 MB
+2026-11-16 13:02:23,773 | INFO | Batch 11 written | 5,500,000/25,000,000 records | 17,872 rec/s | memory 547 MB
+2026-11-16 13:02:41,771 | INFO | Batch 12 written | 6,000,000/25,000,000 records | 18,420 rec/s | memory 525 MB
+2026-11-16 13:03:03,017 | INFO | Batch 13 written | 6,500,000/25,000,000 records | 18,733 rec/s | memory 538 MB
+2026-11-16 13:03:23,219 | INFO | Batch 14 written | 7,000,000/25,000,000 records | 19,064 rec/s | memory 495 MB
+2026-11-16 13:03:48,472 | INFO | Batch 15 written | 7,500,000/25,000,000 records | 19,111 rec/s | memory 550 MB
+2026-11-16 13:04:10,410 | INFO | Batch 16 written | 8,000,000/25,000,000 records | 19,306 rec/s | memory 544 MB
+2026-11-16 13:04:34,619 | INFO | Batch 17 written | 8,500,000/25,000,000 records | 19,380 rec/s | memory 553 MB
+2026-11-16 13:04:54,524 | INFO | Batch 18 written | 9,000,000/25,000,000 records | 19,630 rec/s | memory 522 MB
+2026-11-16 13:05:15,551 | INFO | Batch 19 written | 9,500,000/25,000,000 records | 19,811 rec/s | memory 522 MB
+2026-11-16 13:05:33,772 | INFO | Batch 20 written | 10,000,000/25,000,000 records | 20,091 rec/s | memory 523 MB
+2026-11-16 13:05:52,371 | INFO | Batch 21 written | 10,500,000/25,000,000 records | 20,335 rec/s | memory 515 MB
+2026-11-16 13:06:11,216 | INFO | Batch 22 written | 11,000,000/25,000,000 records | 20,554 rec/s | memory 505 MB
+2026-11-16 13:06:31,914 | INFO | Batch 23 written | 11,500,000/25,000,000 records | 20,688 rec/s | memory 544 MB
+2026-11-16 13:06:53,320 | INFO | Batch 24 written | 12,000,000/25,000,000 records | 20,787 rec/s | memory 516 MB
+2026-11-16 13:07:20,216 | INFO | Batch 25 written | 12,500,000/25,000,000 records | 20,689 rec/s | memory 546 MB
+2026-11-16 13:07:45,183 | INFO | Batch 26 written | 13,000,000/25,000,000 records | 20,663 rec/s | memory 532 MB
+2026-11-16 13:08:07,019 | INFO | Batch 27 written | 13,500,000/25,000,000 records | 20,738 rec/s | memory 566 MB
+2026-11-16 13:08:30,186 | INFO | Batch 28 written | 14,000,000/25,000,000 records | 20,767 rec/s | memory 515 MB
+2026-11-16 13:08:54,838 | INFO | Batch 29 written | 14,500,000/25,000,000 records | 20,750 rec/s | memory 589 MB
+2026-11-16 13:09:17,795 | INFO | Batch 30 written | 15,000,000/25,000,000 records | 20,782 rec/s | memory 542 MB
+2026-11-16 13:09:40,529 | INFO | Batch 31 written | 15,500,000/25,000,000 records | 20,819 rec/s | memory 523 MB
+2026-11-16 13:10:10,535 | INFO | Batch 32 written | 16,000,000/25,000,000 records | 20,658 rec/s | memory 541 MB
+2026-11-16 13:10:40,455 | INFO | Batch 33 written | 16,500,000/25,000,000 records | 20,512 rec/s | memory 559 MB
+2026-11-16 13:11:02,474 | INFO | Batch 34 written | 17,000,000/25,000,000 records | 20,570 rec/s | memory 569 MB
+2026-11-16 13:11:26,094 | INFO | Batch 35 written | 17,500,000/25,000,000 records | 20,587 rec/s | memory 531 MB
+2026-11-16 13:11:48,474 | INFO | Batch 36 written | 18,000,000/25,000,000 records | 20,632 rec/s | memory 550 MB
+2026-11-16 13:12:12,152 | INFO | Batch 37 written | 18,500,000/25,000,000 records | 20,645 rec/s | memory 541 MB
+2026-11-16 13:12:37,159 | INFO | Batch 38 written | 19,000,000/25,000,000 records | 20,627 rec/s | memory 547 MB
+2026-11-16 13:13:05,148 | INFO | Batch 39 written | 19,500,000/25,000,000 records | 20,545 rec/s | memory 600 MB
+2026-11-16 13:13:32,172 | INFO | Batch 40 written | 20,000,000/25,000,000 records | 20,489 rec/s | memory 556 MB
+2026-11-16 13:13:55,614 | INFO | Batch 41 written | 20,500,000/25,000,000 records | 20,509 rec/s | memory 583 MB
+2026-11-16 13:14:15,991 | INFO | Batch 42 written | 21,000,000/25,000,000 records | 20,589 rec/s | memory 500 MB
+2026-11-16 13:14:38,700 | INFO | Batch 43 written | 21,500,000/25,000,000 records | 20,620 rec/s | memory 492 MB
+2026-11-16 13:15:07,778 | INFO | Batch 44 written | 22,000,000/25,000,000 records | 20,527 rec/s | memory 501 MB
+2026-11-16 13:15:31,189 | INFO | Batch 45 written | 22,500,000/25,000,000 records | 20,545 rec/s | memory 542 MB
+2026-11-16 13:15:52,499 | INFO | Batch 46 written | 23,000,000/25,000,000 records | 20,601 rec/s | memory 525 MB
+2026-11-16 13:16:20,710 | INFO | Batch 47 written | 23,500,000/25,000,000 records | 20,530 rec/s | memory 538 MB
+2026-11-16 13:16:44,132 | INFO | Batch 48 written | 24,000,000/25,000,000 records | 20,546 rec/s | memory 527 MB
+2026-11-16 13:17:09,581 | INFO | Batch 49 written | 24,500,000/25,000,000 records | 20,527 rec/s | memory 520 MB
+2026-11-16 13:17:38,363 | INFO | Batch 50 written | 25,000,000/25,000,000 records | 20,453 rec/s | memory 502 MB
+2026-11-16 13:17:38,751 | INFO | Data generation completed successfully
+2026-11-16 13:17:38,757 | INFO | Total records generated: 25,000,000
+2026-11-16 13:17:38,757 | INFO | Total files: 1,800 | Total size: 2.78 GB
+2026-11-16 13:17:38,757 | INFO | Total time taken: 1,222.33 s
+2026-11-16 13:17:38,758 | INFO | Peak memory usage: 600 MB
