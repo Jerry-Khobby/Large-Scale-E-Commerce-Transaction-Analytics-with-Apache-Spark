@@ -61,6 +61,7 @@ def get_spark_session(app_name: str, master: str = config.SPARK_MASTER, **extra_
         .config("spark.driver.memory", config.SPARK_DRIVER_MEMORY)
         .config("spark.sql.shuffle.partitions", config.SPARK_SHUFFLE_PARTITIONS)
         .config("spark.sql.session.timeZone", "UTC")
+        .config("spark.ui.showConsoleProgress", "false")
     )
     for key, value in extra_conf.items():
         builder = builder.config(key.replace("_", "."), value)
