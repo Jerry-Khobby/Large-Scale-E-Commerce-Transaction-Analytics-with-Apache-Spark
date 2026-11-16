@@ -13,13 +13,17 @@ Usage:
 from __future__ import annotations
 
 import csv
+import re
 import shutil
+import statistics
+import time
 
 from pyspark.sql import DataFrame, SparkSession, Window
 from pyspark.sql import functions as F
 
 import config
-from utils import ensure_dirs, get_logger, get_spark_session, save_csv, timer
+from utils import (ensure_dirs, get_logger, get_spark_session, save_csv,
+                   save_explain, timer)
 
 logger = get_logger("SparkAnalytics", "spark_analytics.log")
 
@@ -210,6 +214,90 @@ def time_analysis(spark: SparkSession) -> None:
 # ---------------------------------------------------------------------------
 # Query group 5 - Window functions (DataFrame API + SQL comparison)
 # ---------------------------------------------------------------------------
+def running_total_dataframe(df: DataFrame) -> DataFrame:
+    """Monthly revenue with a running total, written with the DataFrame API."""
+    monthly = (
+        successful(df)
+        .withColumn("year_month",
+                    F.date_format("transaction_timestamp", "yyyy-MM"))
+        .groupBy("year_month")
+        .agg(F.sum("total_amount").alias("monthly_revenue"))
+    )
+    running = (Window.orderBy("year_month")
+               .rowsBetween(Window.unboundedPreceding, 0))
+    return (monthly
+            .withColumn("running_total",
+                        F.sum("monthly_revenue").over(running))
+            .orderBy("year_month"))
+
+
+RUNNING_TOTAL_SQL = """
+    WITH monthly AS (
+        SELECT date_format(transaction_timestamp, 'yyyy-MM') AS year_month,
+               SUM(total_amount) AS monthly_revenue
+        FROM transactions WHERE status = 'SUCCESS'
+        GROUP BY 1
+    )
+    SELECT year_month, monthly_revenue,
+           SUM(monthly_revenue) OVER (
+               ORDER BY year_month
+               ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+           ) AS running_total
+    FROM monthly ORDER BY year_month
+"""
+
+
+def _operator_tree(plan_file) -> str:
+    """The operator tree at the top of a formatted plan, without node ids."""
+    tree = plan_file.read_text(encoding="utf-8").split("\n\n")[0]
+    return re.sub(r"\s*\(\d+\)", "", tree)
+
+
+def compare_api_vs_sql(spark: SparkSession, df: DataFrame,
+                       runs: int = 3) -> list[dict]:
+    """
+    Run the same running-total query through the DataFrame API and Spark
+    SQL, save both execution plans, and check that results and physical
+    operators match. Each timed run builds a fresh query (re-collecting the
+    same DataFrame would reuse its shuffle files) and the two approaches
+    alternate so neither always benefits from a warmer file cache.
+    """
+    builders = {"dataframe_api": lambda: running_total_dataframe(df),
+                "spark_sql": lambda: spark.sql(RUNNING_TOTAL_SQL)}
+    trees = {name: _operator_tree(save_explain(build(), f"running_total_{name}"))
+             for name, build in builders.items()}
+
+    times = {name: [] for name in builders}
+    rows = {}
+    for _ in range(runs):
+        for name, build in builders.items():
+            start = time.perf_counter()
+            rows[name] = build().collect()
+            times[name].append(time.perf_counter() - start)
+
+    same_rows = rows["dataframe_api"] == rows["spark_sql"]
+    same_plan = trees["dataframe_api"] == trees["spark_sql"]
+    results = []
+    for name, secs in times.items():
+        logger.info(f"Running total via {name}: "
+                    + ", ".join(f"{t:.1f}s" for t in secs))
+        results.append({"approach": name,
+                        "run_seconds": " ".join(f"{t:.2f}" for t in secs),
+                        "median_seconds": round(statistics.median(secs), 2),
+                        "rows": len(rows[name]), "results_match": same_rows,
+                        "same_physical_operators": same_plan})
+    logger.info(f"Same results: {same_rows} | "
+                f"same physical operators: {same_plan}")
+
+    out = config.REPORTS_DIR / "dataframe_vs_sql.csv"
+    with open(out, "w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=results[0].keys())
+        writer.writeheader()
+        writer.writerows(results)
+    logger.info(f"Comparison written to {out}")
+    return results
+
+
 def window_analysis(spark: SparkSession, df: DataFrame) -> None:
     product_revenue = (
         successful(df).groupBy("product_category", "product_name")
@@ -221,29 +309,9 @@ def window_analysis(spark: SparkSession, df: DataFrame) -> None:
             .orderBy("product_category", "rank_in_category"),
             "product_rank_in_category", n=30)
 
-    # Running total - DataFrame API
-    monthly = (
-        successful(df)
-        .withColumn("year_month", F.date_format("transaction_timestamp", "yyyy-MM"))
-        .groupBy("year_month").agg(F.sum("total_amount").alias("monthly_revenue"))
-    )
-    running = Window.orderBy("year_month").rowsBetween(Window.unboundedPreceding, 0)
-    publish(monthly.withColumn("running_total", F.sum("monthly_revenue").over(running))
-            .orderBy("year_month"),
-            "running_revenue_by_month", n=36)
-
-    # Same running total in Spark SQL, to compare the two approaches
-    spark.sql("""
-        WITH monthly AS (
-            SELECT date_format(transaction_timestamp, 'yyyy-MM') AS year_month,
-                   SUM(total_amount) AS monthly_revenue
-            FROM transactions WHERE status = 'SUCCESS'
-            GROUP BY 1
-        )
-        SELECT year_month, monthly_revenue,
-               SUM(monthly_revenue) OVER (ORDER BY year_month) AS running_total
-        FROM monthly ORDER BY year_month
-    """).show(5)
+    # Running total - DataFrame API (the SQL version is in compare_api_vs_sql)
+    publish(running_total_dataframe(df), "running_revenue_by_month", n=36)
+    compare_api_vs_sql(spark, df)
 
     # Customers spending above the average customer
     publish(spark.sql("""

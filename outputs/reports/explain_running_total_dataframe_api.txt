@@ -1,0 +1,63 @@
+== Physical Plan ==
+AdaptiveSparkPlan (10)
++- Window (9)
+   +- Sort (8)
+      +- Exchange (7)
+         +- HashAggregate (6)
+            +- Exchange (5)
+               +- HashAggregate (4)
+                  +- Project (3)
+                     +- Filter (2)
+                        +- Scan parquet  (1)
+
+
+(1) Scan parquet 
+Output [5]: [total_amount#10, status#12, transaction_timestamp#13, year#21, month#22]
+Batched: true
+Location: InMemoryFileIndex [file:/app/data/cleaned]
+PushedFilters: [IsNotNull(status), EqualTo(status,SUCCESS)]
+ReadSchema: struct<total_amount:double,status:string,transaction_timestamp:timestamp_ntz>
+
+(2) Filter
+Input [5]: [total_amount#10, status#12, transaction_timestamp#13, year#21, month#22]
+Condition : (isnotnull(status#12) AND (status#12 = SUCCESS))
+
+(3) Project
+Output [2]: [total_amount#10, date_format(cast(transaction_timestamp#13 as timestamp), yyyy-MM, Some(UTC)) AS year_month#24]
+Input [5]: [total_amount#10, status#12, transaction_timestamp#13, year#21, month#22]
+
+(4) HashAggregate
+Input [2]: [total_amount#10, year_month#24]
+Keys [1]: [year_month#24]
+Functions [1]: [partial_sum(total_amount#10)]
+Aggregate Attributes [1]: [sum#53]
+Results [2]: [year_month#24, sum#54]
+
+(5) Exchange
+Input [2]: [year_month#24, sum#54]
+Arguments: hashpartitioning(year_month#24, 200), ENSURE_REQUIREMENTS, [plan_id=26]
+
+(6) HashAggregate
+Input [2]: [year_month#24, sum#54]
+Keys [1]: [year_month#24]
+Functions [1]: [sum(total_amount#10)]
+Aggregate Attributes [1]: [sum(total_amount#10)#50]
+Results [2]: [year_month#24, sum(total_amount#10)#50 AS monthly_revenue#25]
+
+(7) Exchange
+Input [2]: [year_month#24, monthly_revenue#25]
+Arguments: SinglePartition, ENSURE_REQUIREMENTS, [plan_id=29]
+
+(8) Sort
+Input [2]: [year_month#24, monthly_revenue#25]
+Arguments: [year_month#24 ASC NULLS FIRST], false, 0
+
+(9) Window
+Input [2]: [year_month#24, monthly_revenue#25]
+Arguments: [sum(monthly_revenue#25) windowspecdefinition(year_month#24 ASC NULLS FIRST, specifiedwindowframe(RowFrame, unboundedpreceding$(), currentrow$())) AS running_total#51], [year_month#24 ASC NULLS FIRST]
+
+(10) AdaptiveSparkPlan
+Output [3]: [year_month#24, monthly_revenue#25, running_total#51]
+Arguments: isFinalPlan=false
+
+
